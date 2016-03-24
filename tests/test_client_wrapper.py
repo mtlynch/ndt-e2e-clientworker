@@ -25,9 +25,12 @@ from client_wrapper import client_wrapper
 class NdtHtml5SeleniumDriverGeneralTest(unittest.TestCase):
 
     def setUp(self):
+        self.mock_browser = mock.MagicMock()
+
         self.mock_driver = mock.patch.object(client_wrapper.webdriver,
                                              'Firefox',
-                                             autospec=True)
+                                             autospec=True,
+                                             return_value=self.mock_browser)
         self.addCleanup(self.mock_driver.stop)
         self.mock_driver.start()
 
@@ -38,7 +41,24 @@ class NdtHtml5SeleniumDriverGeneralTest(unittest.TestCase):
         self.mock_visibility.start()
         self.mock_visibility.return_value = True
 
+    def test_invalid_URL_throws_error(self):
+        self.mock_browser.get.side_effect = exceptions.WebDriverException(
+            u'Failed to load test UI.')
+
+        selenium_driver = client_wrapper.NdtHtml5SeleniumDriver()
+        test_results = selenium_driver.perform_test(url='invalid_url',
+                                                    browser='firefox',
+                                                    timeout=1)
+
+        # We have one error
+        self.assertEqual(len(test_results.errors), 1)
+
+        # And that error is about test UI loading failure
+        self.assertEqual(test_results.errors[0].message,
+                         'Failed to load test UI.')
+
     def test_timeout_throws_error(self):
+
         # Call to webdriverwait throws timeout exception
         with mock.patch.object(client_wrapper.ui,
                                'WebDriverWait',
@@ -268,35 +288,6 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
         self.assertEqual(test_results.latency, '72')
         # And an error object is not contained in the list
         self.assertEqual(len(test_results.errors), 0)
-
-
-class NdtHtml5SeleniumDriverInvalidURLTest(unittest.TestCase):
-
-    def test_invalid_URL_throws_error(self):
-
-        # Mock calls to driver.get() so that a WebDriverException is always raised
-        class NewDriver(object):
-
-            def get(self, url):
-                raise exceptions.WebDriverException(u'Failed to load test UI.')
-
-            def close(self):
-                pass
-
-        with mock.patch.object(client_wrapper.webdriver,
-                               'Firefox',
-                               return_value=NewDriver()):
-            selenium_driver = client_wrapper.NdtHtml5SeleniumDriver()
-            test_results = selenium_driver.perform_test(url='invalid_url',
-                                                        browser='firefox',
-                                                        timeout=1)
-
-        # We have one error
-        self.assertEqual(len(test_results.errors), 1)
-
-        # And that error is about test UI loading failure
-        self.assertEqual(test_results.errors[0].message,
-                         'Failed to load test UI.')
 
 
 if __name__ == '__main__':
