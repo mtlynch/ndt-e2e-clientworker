@@ -44,11 +44,11 @@ class NdtResult(object):
     """
 
     def __init__(self,
-                 start_time,
-                 end_time,
-                 c2s_start_time,
-                 s2c_start_time,
-                 errors,
+                 start_time=None,
+                 end_time=None,
+                 c2s_start_time=None,
+                 s2c_start_time=None,
+                 errors=[],
                  latency=None,
                  c2s_throughput=None,
                  s2c_throughput=None):
