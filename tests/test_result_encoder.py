@@ -23,6 +23,16 @@ from client_wrapper import result_encoder
 from client_wrapper import results
 
 
+def create_ndt_result(start_time, end_time, client, client_version, os,
+                      os_version):
+    result = results.NdtResult(start_time=start_time, end_time=end_time)
+    result.client = client
+    result.client_version = client_version
+    result.os = os
+    result.os_version = os_version
+    return result
+
+
 class NdtResultEncoderTest(unittest.TestCase):
 
     def setUp(self):
@@ -34,15 +44,23 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertDictEqual(json.loads(expected), json.loads(actual))
 
     def test_encodes_correctly_when_only_required_fields_are_set(self):
-        result = results.NdtResult(
+        result = create_ndt_result(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
-                                       pytz.utc))
+                                       pytz.utc),
+            client='mock_client',
+            client_version='mock_client_version',
+            os='mock_os',
+            os_version='mock_os_version')
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
     "end_time": "2016-02-26T15:59:33.284345Z",
+    "client": "mock_client",
+    "client_version": "mock_client_version",
+    "os": "mock_os",
+    "os_version": "mock_os_version",
     "errors": []
 }"""
 
@@ -50,11 +68,15 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_result_includes_one_error(self):
-        result = results.NdtResult(
+        result = create_ndt_result(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
-                                       pytz.utc))
+                                       pytz.utc),
+            client='mock_client',
+            client_version='mock_client_version',
+            os='mock_os',
+            os_version='mock_os_version')
         result.errors = [results.TestError(
             datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
             'mock error message 1')]
@@ -62,6 +84,10 @@ class NdtResultEncoderTest(unittest.TestCase):
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
     "end_time": "2016-02-26T15:59:33.284345Z",
+    "client": "mock_client",
+    "client_version": "mock_client_version",
+    "os": "mock_os",
+    "os_version": "mock_os_version",
     "errors": [
         {
             "timestamp": "2016-02-26T15:53:29.123456Z",
@@ -74,11 +100,15 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_result_includes_two_errors(self):
-        result = results.NdtResult(
+        result = create_ndt_result(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
-                                       pytz.utc))
+                                       pytz.utc),
+            client='mock_client',
+            client_version='mock_client_version',
+            os='mock_os',
+            os_version='mock_os_version')
         result.errors = [
             results.TestError(
                 datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
@@ -91,6 +121,10 @@ class NdtResultEncoderTest(unittest.TestCase):
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
     "end_time": "2016-02-26T15:59:33.284345Z",
+    "client": "mock_client",
+    "client_version": "mock_client_version",
+    "os": "mock_os",
+    "os_version": "mock_os_version",
     "errors": [
         {
             "timestamp": "2016-02-26T15:53:29.123456Z",

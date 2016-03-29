@@ -19,33 +19,46 @@ import results
 
 
 class NdtResultEncoder(json.JSONEncoder):
-    """Encodes an NdtResult instance into JSON."""
+    """Encodes an NdtResult instance into JSON.
+
+    Given a populated NdtResult instance, serializes the result to JSON.
+
+    The encoder assumes that:
+
+    * NdtResult's required fields (those not documented as allowing None
+        values) are populated
+    * All populated fields are valid
+
+    In other words, it is caller's responsibility to pass valid data.
+    """
 
     def default(self, obj):
         if isinstance(obj, results.NdtResult):
-            return self._encode_ndt_result(obj)
+            return _encode_ndt_result(obj)
+        elif isinstance(obj, results.TestError):
+            return _encode_error(obj)
+        elif isinstance(obj, datetime.datetime):
+            return _encode_time(obj)
         return json.JSONEncoder.default(self, obj)
 
-    def _encode_ndt_result(self, result):
-        result_dict = {
-            'start_time': _encode_time(result.start_time),
-            'end_time': _encode_time(result.end_time),
-            'errors': _encode_errors(result.errors),
-        }
-        # TODO(mtlynch): Implement encoding for NdtResult's other fields.
 
-        return result_dict
+def _encode_ndt_result(result):
+    result_dict = {
+        'start_time': result.start_time,
+        'end_time': result.end_time,
+        'client': result.client,
+        'client_version': result.client_version,
+        'os': result.os,
+        'os_version': result.os_version,
+        'errors': result.errors,
+    }
+    # TODO(mtlynch): Implement encoding for NdtResult's other fields.
 
-
-def _encode_errors(errors):
-    return [_encode_error(e) for e in errors]
+    return result_dict
 
 
 def _encode_error(error):
-    return {
-        'timestamp': _encode_time(error.timestamp),
-        'message': error.message,
-    }
+    return {'timestamp': error.timestamp, 'message': error.message}
 
 
 def _encode_time(time):
