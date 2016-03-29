@@ -27,4 +27,6 @@ EDGE = 'edge'
 SAFARI = 'safari'
 
 # OS shortnames
-# TODO(mtlynch): Add OS shortnames as we add code that relies on each name.
+WINDOWS_10 = 'win10'
+UBUNTU_14 = 'ubuntu14.04'
+OSX_CAPITAN = 'osx_capitan'
