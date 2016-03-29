@@ -15,12 +15,11 @@
 import argparse
 
 import html5_driver
-
-NDT_HTML5_CLIENT = 'ndt_js'
+import names
 
 
 def main(args):
-    if args.client == NDT_HTML5_CLIENT:
+    if args.client == names.NDT_HTML5:
         driver = html5_driver.NdtHtml5SeleniumDriver(args.browser,
                                                      args.client_url,
                                                      timeout=20)
@@ -46,7 +45,7 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--client',
                         help='NDT client implementation to run',
-                        choices=(NDT_HTML5_CLIENT,),
+                        choices=(names.NDT_HTML5,),
                         required=True)
     parser.add_argument('--browser',
                         help='Browser to run under (for browser-based client)',
