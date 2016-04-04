@@ -232,11 +232,6 @@ class NdtResultEncoderTest(unittest.TestCase):
                                        pytz.utc),
             throughput=98.235)
         result.latency = 23.8
-        result.errors = [
-            results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-                'mock error message 1'),
-        ]
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -252,12 +247,7 @@ class NdtResultEncoderTest(unittest.TestCase):
     "s2c_end_time": "2016-02-26T15:51:45.123456Z",
     "s2c_throughput": 98.235,
     "latency": 23.8,
-    "errors": [
-        {
-            "timestamp": "2016-02-26T15:53:29.123456Z",
-            "message": "mock error message 1"
-        }
-    ]
+    "errors": []
 }"""
 
         encoded_actual = self.encoder.encode(result)
@@ -280,11 +270,6 @@ class NdtResultEncoderTest(unittest.TestCase):
                                        pytz.utc),
             throughput=10.127)
         result.latency = 23.8
-        result.errors = [
-            results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-                'mock error message 1'),
-        ]
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -300,12 +285,7 @@ class NdtResultEncoderTest(unittest.TestCase):
     "s2c_end_time": null,
     "s2c_throughput": null,
     "latency": 23.8,
-    "errors": [
-        {
-            "timestamp": "2016-02-26T15:53:29.123456Z",
-            "message": "mock error message 1"
-        }
-    ]
+    "errors": []
 }"""
 
         encoded_actual = self.encoder.encode(result)
@@ -333,11 +313,6 @@ class NdtResultEncoderTest(unittest.TestCase):
             end_time=datetime.datetime(2016, 2, 26, 15, 51, 45, 123456,
                                        pytz.utc),
             throughput=98.235)
-        result.errors = [
-            results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-                'mock error message 1'),
-        ]
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -353,12 +328,7 @@ class NdtResultEncoderTest(unittest.TestCase):
     "s2c_end_time": "2016-02-26T15:51:45.123456Z",
     "s2c_throughput": 98.235,
     "latency": null,
-    "errors": [
-        {
-            "timestamp": "2016-02-26T15:53:29.123456Z",
-            "message": "mock error message 1"
-        }
-    ]
+    "errors": []
 }"""
 
         encoded_actual = self.encoder.encode(result)
@@ -388,11 +358,6 @@ class NdtResultEncoderTest(unittest.TestCase):
                                        pytz.utc),
             throughput=0.0)
         result.latency = 0.0
-        result.errors = [
-            results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-                'mock error message 1'),
-        ]
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -408,12 +373,7 @@ class NdtResultEncoderTest(unittest.TestCase):
     "s2c_end_time": "2016-02-26T15:51:45.123456Z",
     "s2c_throughput": 0.0,
     "latency": 0.0,
-    "errors": [
-        {
-            "timestamp": "2016-02-26T15:53:29.123456Z",
-            "message": "mock error message 1"
-        }
-    ]
+    "errors": []
 }"""
 
         encoded_actual = self.encoder.encode(result)
