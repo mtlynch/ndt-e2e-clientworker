@@ -52,7 +52,28 @@ def _encode_ndt_result(result):
         'os_version': result.os_version,
         'errors': result.errors,
     }
-    # TODO(mtlynch): Implement encoding for NdtResult's other fields.
+    # Flatten out c2s result so that all fields are in the root of the overall
+    # NDT result.
+    if result.c2s_result:
+        result_dict['c2s_start_time'] = result.c2s_result.start_time
+        result_dict['c2s_end_time'] = result.c2s_result.end_time
+        result_dict['c2s_throughput'] = result.c2s_result.throughput
+    else:
+        result_dict['c2s_start_time'] = None
+        result_dict['c2s_end_time'] = None
+        result_dict['c2s_throughput'] = None
+
+    # Flatten out s2c result so that all fields are in the root of the overall
+    # NDT result.
+    if result.s2c_result:
+        result_dict['s2c_start_time'] = result.s2c_result.start_time
+        result_dict['s2c_end_time'] = result.s2c_result.end_time
+        result_dict['s2c_throughput'] = result.s2c_result.throughput
+    else:
+        result_dict['s2c_start_time'] = None
+        result_dict['s2c_end_time'] = None
+        result_dict['s2c_throughput'] = None
+    result_dict['latency'] = result.latency
 
     return result_dict
 

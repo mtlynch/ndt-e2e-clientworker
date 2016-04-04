@@ -53,12 +53,12 @@ class NdtResult(object):
             results page loaded).
         errors: A list of TestError objects representing any errors encountered
             during the tests (or an empty list if all tests were successful).
-        c2s_result: The NdtSingleResult for the c2s (upload) test.
-        s2c_result: The NdtSingleResult for the s2c (download) test.
+        c2s_result: The NdtSingleResult for the c2s (upload) test (or None if no
+            result was recorded).
+        s2c_result: The NdtSingleResult for the s2c (download) test (or None if
+            no result was recorded).
         latency: The reported latency (in milliseconds) or None if the test did
             not complete.
-        c2s_throughput: The reported upload (c2s) throughput (in kb/s).
-        s2c_throughput: The reported download (s2c) throughput (in kb/s).
         os: Name of OS in which the test ran (e.g. "Windows").
         os_version: OS version string (e.g. "10.0").
         client: Shortname of the NDT client (e.g. "ndt_js").
