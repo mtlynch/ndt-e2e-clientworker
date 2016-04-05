@@ -74,6 +74,8 @@ def _encode_ndt_result(result):
         result_dict['s2c_end_time'] = None
         result_dict['s2c_throughput'] = None
     result_dict['latency'] = result.latency
+    result_dict['browser'] = result.browser
+    result_dict['browser_version'] = result.browser_version
 
     return result_dict
 

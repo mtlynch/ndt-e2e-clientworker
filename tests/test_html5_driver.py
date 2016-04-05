@@ -26,6 +26,7 @@ class NdtHtml5SeleniumDriverGeneralTest(unittest.TestCase):
 
     def setUp(self):
         self.mock_browser = mock.MagicMock()
+        self.mock_browser.capabilities = {'version': 'mock_version'}
         self.mock_driver = mock.patch.object(html5_driver.webdriver,
                                              'Firefox',
                                              autospec=True,
@@ -97,6 +98,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
 
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -134,6 +138,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
     def test_results_page_displays_non_numeric_c2s_throughput(self):
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass
@@ -173,6 +180,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
     def test_results_page_displays_non_numeric_s2c_throughput(self):
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass
@@ -229,6 +239,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
 
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -269,6 +282,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
 
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -305,6 +321,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
         # If s2c speed is 72 Gb/s and c2s is speed is 34 in the browser
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass
@@ -346,6 +365,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
 
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -384,6 +406,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
         # read the metric page
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -416,6 +441,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
     def test_chrome_driver_can_be_used_for_test(self):
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass
@@ -457,6 +485,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
 
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -496,6 +527,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
     def test_safari_driver_can_be_used_for_test(self):
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass
@@ -540,6 +574,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
 
         class NewDriver(object):
 
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
+
             def get(self, url):
                 pass
 
@@ -580,6 +617,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
     def test_ndt_test_results_records_todays_times(self):
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass
@@ -633,6 +673,9 @@ class NdtHtml5SeleniumDriverCustomClassTest(unittest.TestCase):
         dates = [base_date + datetime.timedelta(0, 60) * x for x in range(6)]
 
         class NewDriver(object):
+
+            def __init__(self):
+                self.capabilities = {'version': 'mock_version'}
 
             def get(self, url):
                 pass

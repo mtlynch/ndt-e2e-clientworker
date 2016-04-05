@@ -50,6 +50,8 @@ class NdtHtml5SeleniumDriver(object):
         result = results.NdtResult(start_time=None, end_time=None, errors=[])
 
         with contextlib.closing(_create_browser(self._browser)) as driver:
+            result.browser = self._browser
+            result.browser_version = driver.capabilities['version']
 
             if not _load_url(driver, self._url, result):
                 return result

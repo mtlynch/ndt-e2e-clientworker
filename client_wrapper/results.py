@@ -63,6 +63,10 @@ class NdtResult(object):
         os_version: OS version string (e.g. "10.0").
         client: Shortname of the NDT client (e.g. "ndt_js").
         client_version: Version string of the NDT client (e.g. "4.0.1").
+        browser: Name of browser through which the test was performed (or None
+            for a non-browser test).
+        browser_version: Browser's version string (or None for a non-browser
+            test).
     """
 
     def __init__(self,
@@ -82,6 +86,8 @@ class NdtResult(object):
         self.os_version = None
         self.client = None
         self.client_version = None
+        self.browser = None
+        self.browser_version = None
 
     def __str__(self):
         return 'NDT Results:\n Start Time: %s,\n End Time: %s'\
