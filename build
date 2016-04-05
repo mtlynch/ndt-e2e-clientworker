@@ -3,7 +3,10 @@
 # Build steps to validate client_wrapper.
 
 # Run unit tests and calculate code coverage.
-coverage run --source client_wrapper -m unittest discover &&
+coverage run \
+  --source client_wrapper \
+  --omit client_wrapper/install_selenium_extensions.py \
+  -m unittest discover &&
 # Check that source has correct formatting.
 yapf --diff --recursive --style google ./ --exclude=./third_party/* &&
 # Run static analysis for Python bugs/cruft.
