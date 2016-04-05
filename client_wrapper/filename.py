@@ -46,7 +46,7 @@ def create_result_filename(result):
                                                          result.browser_version)
     except canonicalize.Error as e:
         raise FilenameCreationError(
-            'Could not generate filename for NDT result: %s', e.message)
+            'Could not generate filename for NDT result: %s' % e.message)
     client = result.client
     timestamp = _format_time(result.start_time)
     return _FILENAME_FORMAT.format(os=os,
