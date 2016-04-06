@@ -39,6 +39,15 @@ def main(args):
 
 
 def _save_result(result, output_dir):
+    """Saves an NdtResult instance to a file in output_dir.
+
+    Serializes an NdtResult to JSON format, automatically generates a
+    filename based on the NdtResult metadata, then saves it to output_dir.
+
+    Args:
+        result: NdtResult instance to save.
+        output_dir: Directory in which to result file.
+    """
     output_filename = filename.create_result_filename(result)
     output_path = os.path.join(output_dir, output_filename)
     with open(output_path, 'w') as output_file:
