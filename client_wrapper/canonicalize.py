@@ -46,19 +46,13 @@ def os_to_shortname(os, os_version):
         UnsupportedPlatformError if the caller specifies an OS and version
         combination that does not have a known shortname.
     """
-    shortname_map = {
-        #TODO(mtlynch): Check whether this is the right version string for
-        # Win10.
-        'Windows-10.0': names.WINDOWS_10,
-        'Ubuntu-14.04': names.UBUNTU_14,
-        #TODO(mtlynch): Check whether this is the right version string for
-        # El Capitan.
-        'OSX-10.11': names.OSX_10_11,
-    }
-    key = '%s-%s' % (os, os_version)
-    try:
-        return shortname_map[key]
-    except KeyError:
+    if os == 'Windows' and os_version == '10':
+        return names.WINDOWS_10
+    elif os == 'Ubuntu' and os_version == '14.04':
+        return names.UBUNTU_14
+    elif os == 'OSX' and os_version.startswith('10.11'):
+        return names.OSX_10_11
+    else:
         raise UnsupportedPlatformError('Unsupported OS platform: %s v%s' %
                                        (os, os_version))
 

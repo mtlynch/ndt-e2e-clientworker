@@ -42,7 +42,7 @@ class FilenamesTest(unittest.TestCase):
         self.assertEqual(
             'win10-chrome49-ndt_js-2016-02-26T155423Z-results.json',
             get_result_filename(os='Windows',
-                                os_version='10.0',
+                                os_version='10',
                                 browser=names.CHROME,
                                 browser_version='49.0.2623',
                                 client=names.NDT_HTML5,
@@ -51,7 +51,7 @@ class FilenamesTest(unittest.TestCase):
         self.assertEqual(
             'osx10.11-safari9-ndt_js-2017-03-29T042116Z-results.json',
             get_result_filename(os='OSX',
-                                os_version='10.11',
+                                os_version='10.11.3',
                                 browser=names.SAFARI,
                                 browser_version='9.0.3',
                                 client=names.NDT_HTML5,

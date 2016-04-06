@@ -23,11 +23,11 @@ class CanonicalizeTest(unittest.TestCase):
 
     def test_os_to_shortname_converts_recognized_platforms(self):
         self.assertEqual(names.WINDOWS_10,
-                         canonicalize.os_to_shortname('Windows', '10.0'))
+                         canonicalize.os_to_shortname('Windows', '10'))
         self.assertEqual(names.UBUNTU_14,
                          canonicalize.os_to_shortname('Ubuntu', '14.04'))
         self.assertEqual(names.OSX_10_11,
-                         canonicalize.os_to_shortname('OSX', '10.11'))
+                         canonicalize.os_to_shortname('OSX', '10.11.3'))
 
     def test_os_to_shortname_raises_error_on_unsupported_platforms(self):
         with self.assertRaises(canonicalize.UnsupportedPlatformError):
