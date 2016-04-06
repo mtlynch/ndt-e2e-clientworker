@@ -48,6 +48,7 @@ class NdtHtml5SeleniumDriver(object):
             A populated NdtResult object.
         """
         result = results.NdtResult(start_time=None, end_time=None, errors=[])
+        result.client = names.NDT_HTML5
 
         with contextlib.closing(_create_browser(self._browser)) as driver:
             result.browser = self._browser

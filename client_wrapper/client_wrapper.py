@@ -13,9 +13,13 @@
 # limitations under the License.
 
 import argparse
+import os
 
+import filename
 import html5_driver
 import names
+import result_encoder
+import os_metadata
 
 
 def main(args):
@@ -29,15 +33,21 @@ def main(args):
     for i in range(args.iterations):
         print 'starting iteration %d...' % (i + 1)
         result = driver.perform_test()
+        result.os, result.os_version = os_metadata.get_os_metadata()
+        print _jsonify_result(result)
+        _save_result(result, args.output)
 
-        print '\tc2s_throughput: %s Mbps' % result.c2s_result.throughput
-        print '\ts2c_throughput: %s Mbps' % result.s2c_result.throughput
-        if result.errors:
-            print '\terrors:'
-            for error in result.errors:
-                print '\t * %s: %s' % (
-                    error.timestamp.strftime('%y-%m-%d %H:%M:%S'),
-                    error.message)
+
+def _save_result(result, output_dir):
+    output_filename = filename.create_result_filename(result)
+    output_path = os.path.join(output_dir, output_filename)
+    with open(output_path, 'w') as output_file:
+        output_file.write(_jsonify_result(result))
+
+
+def _jsonify_result(result):
+    return result_encoder.NdtResultEncoder(indent=2,
+                                           sort_keys=True).encode(result)
 
 
 if __name__ == '__main__':
@@ -53,6 +63,7 @@ if __name__ == '__main__':
                         choices=('chrome', 'firefox', 'safari', 'edge'))
     parser.add_argument('--client_url',
                         help='URL of NDT client (for server-hosted clients)')
+    parser.add_argument('--output', help='Directory in which to write output')
     parser.add_argument('--iterations',
                         help='Number of iterations to run',
                         type=int,
