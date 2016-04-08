@@ -28,5 +28,6 @@ SAFARI = 'safari'
 
 # OS shortnames
 WINDOWS_10 = 'win10'
+WINDOWS_SERVER_2012_R2 = 'win2012R2'
 UBUNTU_14 = 'ubuntu14.04'
 OSX_10_11 = 'osx10.11'
