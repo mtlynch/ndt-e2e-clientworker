@@ -49,6 +49,15 @@ class FilenamesTest(unittest.TestCase):
                                 start_time=datetime.datetime(
                                     2016, 2, 26, 15, 54, 23, 0, pytz.utc)))
         self.assertEqual(
+            'win2012R2-chrome49-ndt_js-2016-02-26T155423Z-results.json',
+            get_result_filename(os='Windows',
+                                os_version='2012ServerR2',
+                                browser=names.CHROME,
+                                browser_version='49.0.2623',
+                                client=names.NDT_HTML5,
+                                start_time=datetime.datetime(
+                                    2016, 2, 26, 15, 54, 23, 0, pytz.utc)))
+        self.assertEqual(
             'osx10.11-safari9-ndt_js-2017-03-29T042116Z-results.json',
             get_result_filename(os='OSX',
                                 os_version='10.11.3',

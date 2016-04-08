@@ -48,6 +48,8 @@ def os_to_shortname(os, os_version):
     """
     if os == 'Windows' and os_version == '10':
         return names.WINDOWS_10
+    if os == 'Windows' and os_version == '2012ServerR2':
+        return names.WINDOWS_SERVER_2012_R2
     elif os == 'Ubuntu' and os_version == '14.04':
         return names.UBUNTU_14
     elif os == 'OSX' and os_version.startswith('10.11'):
