@@ -104,9 +104,7 @@ def _load_url(driver, url, result):
     try:
         driver.get(url)
     except exceptions.WebDriverException:
-        message = 'Failed to load test UI.'
-        result.errors.append(results.TestError(
-            datetime.datetime.now(pytz.utc), message))
+        result.errors.append(results.TestError('Failed to load test UI.'))
         return False
     return True
 
@@ -172,9 +170,8 @@ def _record_test_in_progress_values(result, driver, timeout):
                                                               driver,
                                                               timeout=timeout)
     except exceptions.TimeoutException:
-        message = 'Test did not complete within timeout period.'
         result.errors.append(results.TestError(
-            datetime.datetime.now(pytz.utc), message))
+            'Test did not complete within timeout period.'))
         return False
     return True
 
@@ -239,9 +236,8 @@ def _populate_metric_values(result, driver):
         result.latency = _validate_metric(result.errors, result.latency,
                                           'latency')
     except exceptions.TimeoutException:
-        message = 'Test did not complete within timeout period.'
         result.errors.append(results.TestError(
-            datetime.datetime.now(pytz.utc), message))
+            'Test did not complete within timeout period.'))
         return False
     return True
 
@@ -300,9 +296,8 @@ def _convert_metric_to_float(errors, metric, metric_name):
     try:
         float(metric)
     except ValueError:
-        message = 'illegal value shown for ' + metric_name + ': ' + str(metric)
-        errors.append(results.TestError(
-            datetime.datetime.now(pytz.utc), message))
+        errors.append(results.TestError('illegal value shown for %s: %s' % (
+            metric_name, metric)))
         return False
     return True
 

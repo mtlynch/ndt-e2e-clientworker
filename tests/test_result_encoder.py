@@ -87,8 +87,8 @@ class NdtResultEncoderTest(unittest.TestCase):
             os='mock_os',
             os_version='mock_os_version')
         result.errors = [results.TestError(
-            datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-            'mock error message 1')]
+            'mock error message 1',
+            datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc))]
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -129,11 +129,11 @@ class NdtResultEncoderTest(unittest.TestCase):
             os_version='mock_os_version')
         result.errors = [
             results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-                'mock error message 1'),
+                'mock error message 1',
+                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc)),
             results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 654321, pytz.utc),
-                'mock error message 2')
+                'mock error message 2',
+                datetime.datetime(2016, 2, 26, 15, 53, 29, 654321, pytz.utc))
         ]
         encoded_expected = """
 {
@@ -194,8 +194,8 @@ class NdtResultEncoderTest(unittest.TestCase):
         result.browser_version = 'mock_browser_version'
         result.errors = [
             results.TestError(
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc),
-                'mock error message 1'),
+                'mock error message 1',
+                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc))
         ]
         encoded_expected = """
 {

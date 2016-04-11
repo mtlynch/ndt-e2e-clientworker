@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
+import pytz
+
 
 class NdtSingleTestResult(object):
     """Result of a single NDT test.
@@ -34,13 +38,21 @@ class TestError(object):
     """Log message of an error encountered in the test.
 
     Attributes:
-        timestamp: Datetime of when the error was observed
-        message: String message describing the error.
+        message: String describing the error.
+        timestamp: Datetime of when the error was observed.
     """
 
-    def __init__(self, timestamp, message):
-        self.timestamp = timestamp
-        self.message = message
+    def __init__(self, message, timestamp=datetime.datetime.now(pytz.utc)):
+        self._message = message
+        self._timestamp = timestamp
+
+    @property
+    def message(self):
+        return self._message
+
+    @property
+    def timestamp(self):
+        return self._timestamp
 
 
 class NdtResult(object):
