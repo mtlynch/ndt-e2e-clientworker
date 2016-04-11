@@ -38,7 +38,7 @@ class TestError(object):
     """Log message of an error encountered in the test.
 
     Attributes:
-        message: String message describing the error.
+        message: String describing the error.
         timestamp: Datetime of when the error was observed.
     """
 
