@@ -216,17 +216,19 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
         self.assertEqual(3.0, result.latency)
         self.assertErrorMessagesEqual([], result.errors)
 
-    def test_invalid_throughput_unit_raises_error(self):
-        self.mock_page_elements['upload-speed-units'] = mock.Mock(
-            text='not a unit')
+    def test_invalid_throughput_unit_yields_error(self):
+        self.mock_page_elements['upload-speed-units'] = mock.Mock(text='banana')
 
-        # And a value error is raised because the c2s throughput unit was
-        # invalid.
-        with self.assertRaises(ValueError):
-            html5_driver.NdtHtml5SeleniumDriver(
-                browser='firefox',
-                url='http://ndt.mock-server.com:7123/',
-                timeout=1000).perform_test()
+        result = html5_driver.NdtHtml5SeleniumDriver(
+            browser='firefox',
+            url='http://ndt.mock-server.com:7123/',
+            timeout=1000).perform_test()
+
+        self.assertIsNone(result.c2s_result.throughput)
+        self.assertEqual(2.0, result.s2c_result.throughput)
+        self.assertEqual(3.0, result.latency)
+        self.assertErrorMessagesEqual(
+            ['Invalid throughput unit specified: banana'], result.errors)
 
     def test_reading_in_result_page_timeout_throws_error(self):
         # Simulate a timeout exception when the driver attempts to read the
