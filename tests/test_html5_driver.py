@@ -125,6 +125,34 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             selenium_driver.perform_test()
 
+    def test_completes_with_error_when_there_is_no_websocket_button(self):
+        """Missing WebSocket button on the UI should be a non-fatal error."""
+        self.mock_page_elements['websocketButton'] = None
+        result = html5_driver.NdtHtml5SeleniumDriver(
+            browser='firefox',
+            url='http://ndt.mock-server.com:7123/',
+            timeout=1000).perform_test()
+
+        self.assertEqual(1.0, result.c2s_result.throughput)
+        self.assertEqual(2.0, result.s2c_result.throughput)
+        self.assertEqual(3.0, result.latency)
+        self.assertErrorMessagesEqual(
+            [html5_driver.ERROR_NO_WEBSOCKETS_BUTTON], result.errors)
+
+    def test_fails_when_there_is_no_start_test_button(self):
+        self.mock_elements_by_text['Start Test'] = None
+
+        result = html5_driver.NdtHtml5SeleniumDriver(
+            browser='firefox',
+            url='http://ndt.mock-server.com:7123/',
+            timeout=1000).perform_test()
+
+        self.assertIsNone(result.c2s_result)
+        self.assertIsNone(result.s2c_result)
+        self.assertIsNone(result.latency)
+        self.assertErrorMessagesEqual(
+            [html5_driver.ERROR_NO_START_TEST_BUTTON], result.errors)
+
     def test_results_page_displays_non_numeric_latency(self):
         self.mock_page_elements['latency'] = mock.Mock(text='Non-numeric value')
         result = html5_driver.NdtHtml5SeleniumDriver(

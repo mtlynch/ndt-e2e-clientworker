@@ -25,6 +25,9 @@ from selenium.common import exceptions
 import names
 import results
 
+ERROR_NO_WEBSOCKETS_BUTTON = 'Could not find "WebSockets" mode button.'
+ERROR_NO_START_TEST_BUTTON = 'Could not find "Start Test" button.'
+
 
 class NdtHtml5SeleniumDriver(object):
 
@@ -51,13 +54,15 @@ class NdtHtml5SeleniumDriver(object):
         result.client = names.NDT_HTML5
 
         with contextlib.closing(_create_browser(self._browser)) as driver:
+            result.start_time = datetime.datetime.now(pytz.utc)
             result.browser = self._browser
             result.browser_version = driver.capabilities['version']
 
             if not _load_url(driver, self._url, result):
                 return result
 
-            _click_start_button(driver, result)
+            if not _click_start_button(driver, result.errors):
+                return result
 
             if not _record_test_in_progress_values(result, driver,
                                                    self._timeout):
@@ -109,7 +114,7 @@ def _load_url(driver, url, result):
     return True
 
 
-def _click_start_button(driver, result):
+def _click_start_button(driver, errors):
     """Clicks start test button and records start time.
 
     Clicks the start test button for an NDT test and records the start time in
@@ -117,14 +122,23 @@ def _click_start_button(driver, result):
 
     Args:
         driver: An instance of a Selenium webdriver browser class.
-        result: An instance of an NdtResult class.
+        errors: A list of errors to append to if start button cannot be clicked.
     """
-    driver.find_element_by_id('websocketButton').click()
+    websocket_button = driver.find_element_by_id('websocketButton')
+    # Failure to find the websockets mode button is non-fatal since it is
+    # assumed to be the default option.
+    if websocket_button:
+        websocket_button.click()
+    else:
+        errors.append(results.TestError(ERROR_NO_WEBSOCKETS_BUTTON))
 
-    start_button = driver.find_elements_by_xpath(
-        "//*[contains(text(), 'Start Test')]")[0]
+    start_button = _find_element_containing_text(driver, 'Start Test')
+    # Failure to find the Start Test button is fatal.
+    if not start_button:
+        errors.append(results.TestError(ERROR_NO_START_TEST_BUTTON))
+        return False
     start_button.click()
-    result.start_time = datetime.datetime.now(pytz.utc)
+    return True
 
 
 def _record_test_in_progress_values(result, driver, timeout):
@@ -143,25 +157,33 @@ def _record_test_in_progress_values(result, driver, timeout):
     Returns:
         True if recording the measured values was successful, False if otherwise.
     """
+    result.c2s_result = results.NdtSingleTestResult()
+    result.s2c_result = results.NdtSingleTestResult()
     try:
         # wait until 'Now Testing your upload speed' is displayed
-        upload_speed_text = driver.find_elements_by_xpath(
-            "//*[contains(text(), 'your upload speed')]")[0]
-        result.c2s_result = results.NdtSingleTestResult()
-        result.c2s_result.start_time = _record_time_when_element_displayed(
-            upload_speed_text,
-            driver,
-            timeout=timeout)
-        result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
+        upload_speed_text = _find_element_containing_text(driver,
+                                                          'your upload speed')
+        if not upload_speed_text:
+            result.errors.append(results.TestError(
+                'Could not find banner indicating upload test in progress.'))
+        else:
+            result.c2s_result.start_time = _record_time_when_element_displayed(
+                upload_speed_text,
+                driver,
+                timeout=timeout)
+            result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
 
         # wait until 'Now Testing your download speed' is displayed
-        download_speed_text = driver.find_elements_by_xpath(
-            "//*[contains(text(), 'your download speed')]")[0]
-        result.s2c_result = results.NdtSingleTestResult()
-        result.s2c_result.start_time = _record_time_when_element_displayed(
-            download_speed_text,
-            driver,
-            timeout=timeout)
+        download_speed_text = _find_element_containing_text(
+            driver, 'your download speed')
+        if not download_speed_text:
+            result.errors.append(results.TestError(
+                'Could not find banner indicating upload test in progress.'))
+        else:
+            result.s2c_result.start_time = _record_time_when_element_displayed(
+                download_speed_text,
+                driver,
+                timeout=timeout)
 
         # wait until the results page appears
         results_text = driver.find_element_by_id('results')
@@ -174,6 +196,14 @@ def _record_test_in_progress_values(result, driver, timeout):
             'Test did not complete within timeout period.'))
         return False
     return True
+
+
+def _find_element_containing_text(driver, text):
+    matching_elements = driver.find_elements_by_xpath(
+        '//*[contains(text(), \'%s\')]' % text)
+    if not matching_elements:
+        return None
+    return matching_elements[0]
 
 
 def _record_time_when_element_displayed(element, driver, timeout):
