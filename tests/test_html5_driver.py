@@ -136,7 +136,7 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
             browser='not_a_browser',
             url='http://ndt.mock-server.com:7123',
             timeout=1)
-        with self.assertRaises(html5_driver.UnsupportedBrowserError):
+        with self.assertRaises(ValueError):
             selenium_driver.perform_test()
 
     def test_results_page_displays_non_numeric_latency(self):

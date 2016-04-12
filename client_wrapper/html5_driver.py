@@ -32,14 +32,6 @@ ERROR_S2C_NEVER_STARTED = 'Timed out waiting for c2s test to begin.'
 ERROR_S2C_NEVER_ENDED = 'Timed out waiting for c2s test to end.'
 
 
-class Error(Exception):
-    pass
-
-
-class UnsupportedBrowserError(Error):
-    pass
-
-
 class NdtHtml5SeleniumDriver(object):
 
     def __init__(self, browser, url, timeout):
@@ -86,9 +78,6 @@ def _create_browser(browser):
     Returns:
         An instance of a Selenium webdriver browser class corresponding to
         the specified browser.
-
-    Raises:
-        UnsupportedBrowserError: When an invalid browser is specified.
     """
     if browser == names.FIREFOX:
         return webdriver.Firefox()
@@ -98,7 +87,7 @@ def _create_browser(browser):
         return webdriver.Edge()
     elif browser == names.SAFARI:
         return webdriver.Safari()
-    raise UnsupportedBrowserError('Invalid browser specified: %s' % browser)
+    raise ValueError('Invalid browser specified: %s' % browser)
 
 
 def _load_url(driver, url, result):
