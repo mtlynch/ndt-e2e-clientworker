@@ -178,7 +178,7 @@ def _wait_for_results_page_to_appear(driver, timeout):
 
 
 def _wait_until_element_is_visible(driver, element, timeout):
-    """Waits until a DOM element is visible in within a given timeout.
+    """Waits until a DOM element is visible within a given timeout.
 
     Args:
         driver: An instance of a Selenium webdriver browser class.
