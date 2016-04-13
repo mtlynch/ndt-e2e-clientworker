@@ -258,8 +258,8 @@ def _parse_throughput(errors, throughput, throughput_units,
         elif throughput_units == 'Mb/s':
             return throughput
         else:
-            raise ValueError('Invalid throughput unit specified: %s' %
-                             throughput_units)
+            errors.append(results.TestError(
+                'Invalid throughput unit specified: %s' % throughput_units))
     return None
 
 
