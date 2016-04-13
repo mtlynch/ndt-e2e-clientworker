@@ -228,27 +228,6 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
                 url='http://ndt.mock-server.com:7123/',
                 timeout=1000).perform_test()
 
-    def test_reading_in_result_page_timeout_throws_error(self):
-        # Simulate a timeout exception when the driver attempts to read the
-        # metric page.
-        def mock_find_element_by_id(id):
-            if id == 'upload-speed':
-                raise exceptions.TimeoutException
-            return self.mock_page_elements[id]
-
-        self.mock_driver.find_element_by_id.side_effect = (
-            mock_find_element_by_id)
-        result = html5_driver.NdtHtml5SeleniumDriver(
-            browser='firefox',
-            url='http://ndt.mock-server.com:7123/',
-            timeout=1000).perform_test()
-
-        self.assertIsNone(result.c2s_result.throughput)
-        self.assertIsNone(result.s2c_result.throughput)
-        self.assertIsNone(result.latency)
-        self.assertErrorMessagesEqual(
-            ['Test did not complete within timeout period.'], result.errors)
-
     @mock.patch.object(html5_driver.webdriver, 'Chrome')
     def test_chrome_driver_can_be_used_for_test(self, mock_chrome):
         mock_chrome.return_value = self.mock_driver

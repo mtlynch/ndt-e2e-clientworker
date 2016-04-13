@@ -63,8 +63,7 @@ class NdtHtml5SeleniumDriver(object):
                                                    self._timeout):
                 return result
 
-            if not _populate_metric_values(result, driver):
-                return result
+            _populate_metric_values(result, driver)
 
             return result
 
@@ -204,42 +203,28 @@ def _populate_metric_values(result, driver):
     """Populates NdtResult with metrics from page, checks values are valid.
 
     Populates the NdtResult instance with metrics from the NDT test page. Checks
-    thatthe values for upload (c2s) throughput, download (s2c) throughput, and
+    that the values for upload (c2s) throughput, download (s2c) throughput, and
     latency within the NdtResult instance dict are valid.
 
     Args:
         result: An instance of NdtResult.
         driver: An instance of a Selenium webdriver browser class.
-
-    Returns:
-        True if populating metrics and checking their values was successful.
-            False if otherwise.
     """
-    try:
-        c2s_throughput = driver.find_element_by_id('upload-speed').text
-        c2s_throughput_units = driver.find_element_by_id(
-            'upload-speed-units').text
+    c2s_throughput = driver.find_element_by_id('upload-speed').text
+    c2s_throughput_units = driver.find_element_by_id('upload-speed-units').text
 
-        result.c2s_result.throughput = _parse_throughput(
-            result.errors, c2s_throughput, c2s_throughput_units,
-            'c2s throughput')
+    result.c2s_result.throughput = _parse_throughput(
+        result.errors, c2s_throughput, c2s_throughput_units, 'c2s throughput')
 
-        s2c_throughput = driver.find_element_by_id('download-speed').text
+    s2c_throughput = driver.find_element_by_id('download-speed').text
 
-        s2c_throughput_units = driver.find_element_by_id(
-            'download-speed-units').text
-        result.s2c_result.throughput = _parse_throughput(
-            result.errors, s2c_throughput, s2c_throughput_units,
-            's2c throughput')
+    s2c_throughput_units = driver.find_element_by_id(
+        'download-speed-units').text
+    result.s2c_result.throughput = _parse_throughput(
+        result.errors, s2c_throughput, s2c_throughput_units, 's2c throughput')
 
-        result.latency = driver.find_element_by_id('latency').text
-        result.latency = _validate_metric(result.errors, result.latency,
-                                          'latency')
-    except exceptions.TimeoutException:
-        result.errors.append(results.TestError(
-            'Test did not complete within timeout period.'))
-        return False
-    return True
+    result.latency = driver.find_element_by_id('latency').text
+    result.latency = _validate_metric(result.errors, result.latency, 'latency')
 
 
 def _parse_throughput(errors, throughput, throughput_units,
