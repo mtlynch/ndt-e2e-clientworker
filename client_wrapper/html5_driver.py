@@ -63,8 +63,6 @@ class NdtHtml5SeleniumDriver(object):
 
             _complete_ui_flow(driver, self._url, self._timeout, result)
 
-            _populate_metric_values(result, driver)
-
         result.end_time = datetime.datetime.now(pytz.utc)
         return result
 
@@ -121,6 +119,7 @@ def _complete_ui_flow(driver, url, timeout, result):
             through the UI flow.
     """
     if not _load_url(driver, url, result):
+
         return
 
     _click_start_button(driver)
