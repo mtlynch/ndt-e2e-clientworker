@@ -113,7 +113,7 @@ def _complete_ui_flow(driver, url, timeout, result):
     Args:
         driver: An instance of a Selenium webdriver browser class.
         url: URL to load to start the UI flow.
-        timeout: Maximum time (in seconds) to wait for any element to appear in
+        timeout: Maximum time (in seconds) to wait for an element to appear in
             the flow.
         result: NdtResult instance to populate with results from proceeding
             through the UI flow.
