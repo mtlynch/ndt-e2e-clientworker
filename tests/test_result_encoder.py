@@ -23,16 +23,6 @@ from client_wrapper import result_encoder
 from client_wrapper import results
 
 
-def create_ndt_result(start_time, end_time, client, client_version, os,
-                      os_version):
-    result = results.NdtResult(start_time=start_time, end_time=end_time)
-    result.client = client
-    result.client_version = client_version
-    result.os = os
-    result.os_version = os_version
-    return result
-
-
 class NdtResultEncoderTest(unittest.TestCase):
 
     def setUp(self):
@@ -44,7 +34,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertDictEqual(json.loads(expected), json.loads(actual))
 
     def test_encodes_correctly_when_only_required_fields_are_set(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -77,7 +67,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_result_includes_one_error(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -85,10 +75,9 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.errors = [results.TestError(
-            'mock error message 1',
-            datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc))]
+            os_version='mock_os_version',
+            errors=[results.TestError('mock error message 1', datetime.datetime(
+                2016, 2, 26, 15, 53, 29, 123456, pytz.utc))])
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -118,7 +107,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_result_includes_two_errors(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -126,15 +115,13 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.errors = [
-            results.TestError(
-                'mock error message 1',
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc)),
-            results.TestError(
-                'mock error message 2',
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 654321, pytz.utc))
-        ]
+            os_version='mock_os_version',
+            errors=[
+                results.TestError('mock error message 1', datetime.datetime(
+                    2016, 2, 26, 15, 53, 29, 123456, pytz.utc)),
+                results.TestError('mock error message 2', datetime.datetime(
+                    2016, 2, 26, 15, 53, 29, 654321, pytz.utc))
+            ])
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -168,7 +155,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_fully_populated_result_correctly(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -176,27 +163,26 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.c2s_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 24, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 34, 123456,
-                                       pytz.utc),
-            throughput=10.127)
-        result.s2c_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 35, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 45, 123456,
-                                       pytz.utc),
-            throughput=98.235)
-        result.latency = 23.8
-        result.browser = 'mock_browser'
-        result.browser_version = 'mock_browser_version'
-        result.errors = [
-            results.TestError(
-                'mock error message 1',
-                datetime.datetime(2016, 2, 26, 15, 53, 29, 123456, pytz.utc))
-        ]
+            os_version='mock_os_version',
+            c2s_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 24, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 34,
+                                                       123456, pytz.utc),
+                                                   throughput=10.127),
+            s2c_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 35, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 45,
+                                                       123456, pytz.utc),
+                                                   throughput=98.235),
+            latency=23.8,
+            browser='mock_browser',
+            browser_version='mock_browser_version',
+            errors=[
+                results.TestError('mock error message 1', datetime.datetime(
+                    2016, 2, 26, 15, 53, 29, 123456, pytz.utc))
+            ])
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -226,7 +212,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_c2s_result_is_missing(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -234,14 +220,14 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.s2c_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 35, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 45, 123456,
-                                       pytz.utc),
-            throughput=98.235)
-        result.latency = 23.8
+            os_version='mock_os_version',
+            s2c_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 35, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 45,
+                                                       123456, pytz.utc),
+                                                   throughput=98.235),
+            latency=23.8)
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -266,7 +252,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_s2c_result_is_missing(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -274,14 +260,14 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.c2s_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 24, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 34, 123456,
-                                       pytz.utc),
-            throughput=10.127)
-        result.latency = 23.8
+            os_version='mock_os_version',
+            c2s_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 24, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 34,
+                                                       123456, pytz.utc),
+                                                   throughput=10.127),
+            latency=23.8)
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -306,7 +292,7 @@ class NdtResultEncoderTest(unittest.TestCase):
         self.assertJsonEqual(encoded_expected, encoded_actual)
 
     def test_encodes_correctly_when_latency_is_missing(self):
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -314,19 +300,19 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.c2s_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 24, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 34, 123456,
-                                       pytz.utc),
-            throughput=10.127)
-        result.s2c_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 35, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 45, 123456,
-                                       pytz.utc),
-            throughput=98.235)
+            os_version='mock_os_version',
+            c2s_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 24, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 34,
+                                                       123456, pytz.utc),
+                                                   throughput=10.127),
+            s2c_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 35, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 45,
+                                                       123456, pytz.utc),
+                                                   throughput=98.235))
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",
@@ -352,7 +338,7 @@ class NdtResultEncoderTest(unittest.TestCase):
 
     def test_encodes_zero_valued_metrics(self):
         """Explicit zeroes should be encoded as zeroes, not nulls."""
-        result = create_ndt_result(
+        result = results.NdtResult(
             start_time=datetime.datetime(2016, 2, 26, 15, 51, 23, 452234,
                                          pytz.utc),
             end_time=datetime.datetime(2016, 2, 26, 15, 59, 33, 284345,
@@ -360,20 +346,20 @@ class NdtResultEncoderTest(unittest.TestCase):
             client='mock_client',
             client_version='mock_client_version',
             os='mock_os',
-            os_version='mock_os_version')
-        result.c2s_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 24, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 34, 123456,
-                                       pytz.utc),
-            throughput=0.0)
-        result.s2c_result = results.NdtSingleTestResult(
-            start_time=datetime.datetime(2016, 2, 26, 15, 51, 35, 123456,
-                                         pytz.utc),
-            end_time=datetime.datetime(2016, 2, 26, 15, 51, 45, 123456,
-                                       pytz.utc),
-            throughput=0.0)
-        result.latency = 0.0
+            os_version='mock_os_version',
+            c2s_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 24, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 34,
+                                                       123456, pytz.utc),
+                                                   throughput=0.0),
+            s2c_result=results.NdtSingleTestResult(start_time=datetime.datetime(
+                2016, 2, 26, 15, 51, 35, 123456, pytz.utc),
+                                                   end_time=datetime.datetime(
+                                                       2016, 2, 26, 15, 51, 45,
+                                                       123456, pytz.utc),
+                                                   throughput=0.0),
+            latency=0.0)
         encoded_expected = """
 {
     "start_time": "2016-02-26T15:51:23.452234Z",

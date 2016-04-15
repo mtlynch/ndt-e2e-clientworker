@@ -21,7 +21,8 @@ class NdtSingleTestResult(object):
     """Result of a single NDT test.
 
     Attributes:
-        throughput: The final recorded throughput (in Mbps).
+        throughput: The final recorded throughput (in Mbps) (or None if the test
+            did not complete).
         start_time: The datetime when the test began (or None if the test
             never began).
         end_time: The datetime when the test competed (or None if the test
@@ -32,6 +33,21 @@ class NdtSingleTestResult(object):
         self.throughput = throughput
         self.start_time = start_time
         self.end_time = end_time
+
+    def __eq__(self, other):
+        return all(((self.throughput == other.throughput),
+                    (self.start_time == other.start_time),
+                    (self.end_time == other.end_time)))  # yapf: disable
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __str__(self):
+        return ('[throughput={throughput}, '
+                'start_time={start_time}, '
+                'end_time={end_time}]').format(throughput=self.throughput,
+                                               start_time=self.start_time,
+                                               end_time=self.end_time)
 
 
 class TestError(object):
@@ -45,6 +61,18 @@ class TestError(object):
     def __init__(self, message, timestamp=datetime.datetime.now(pytz.utc)):
         self._message = message
         self._timestamp = timestamp
+
+    def __eq__(self, other):
+        return all(((self.message == other.message),
+                    (self.timestamp == other.timestamp)))  # yapf: disable
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __str__(self):
+        return '[message={message}, timestamp={timestamp}]'.format(
+            message=self.message,
+            timestamp=self.timestamp)
 
     @property
     def message(self):
@@ -68,10 +96,8 @@ class NdtResult(object):
             fatal error in the client.
         errors: A list of TestError objects representing any errors encountered
             during the tests (or an empty list if all tests were successful).
-        c2s_result: The NdtSingleResult for the c2s (upload) test (or None if no
-            result was recorded).
-        s2c_result: The NdtSingleResult for the s2c (download) test (or None if
-            no result was recorded).
+        c2s_result: The NdtSingleResult for the c2s (upload) test.
+        s2c_result: The NdtSingleResult for the s2c (download) test.
         latency: The reported latency (in milliseconds) or None if the test did
             not complete.
         os: Name of OS in which the test ran (e.g. "Windows").
@@ -88,23 +114,67 @@ class NdtResult(object):
                  start_time=None,
                  end_time=None,
                  errors=[],
-                 c2s_result=None,
-                 s2c_result=None,
-                 latency=None):
+                 c2s_result=NdtSingleTestResult(),
+                 s2c_result=NdtSingleTestResult(),
+                 latency=None,
+                 os=None,
+                 os_version=None,
+                 client=None,
+                 client_version=None,
+                 browser=None,
+                 browser_version=None):
         self.start_time = start_time
         self.end_time = end_time
         self.c2s_result = c2s_result
         self.s2c_result = s2c_result
         self.errors = errors
         self.latency = latency
-        self.os = None
-        self.os_version = None
-        self.client = None
-        self.client_version = None
-        self.browser = None
-        self.browser_version = None
+        self.os = os
+        self.os_version = os_version
+        self.client = client
+        self.client_version = client_version
+        self.browser = browser
+        self.browser_version = browser_version
+
+    def __eq__(self, other):
+        return all((
+            (self.start_time == other.start_time),
+            (self.end_time == other.end_time),
+            (self.c2s_result == other.c2s_result),
+            (self.s2c_result == other.s2c_result),
+            (self.latency == other.latency),
+            (self.os == other.os),
+            (self.os_version == other.os_version),
+            (self.client == other.client),
+            (self.client_version == other.client_version),
+            (self.browser == other.browser),
+            (self.browser_version == other.browser_version)))  # yapf: disable
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __str__(self):
-        return 'NDT Results:\n Start Time: %s,\n End Time: %s'\
-        ',\n Latency: %s, \nErrors: %s' % (
-            self.start_time, self.end_time, self.latency, self.errors)
+        return ('[start_time={start_time}, '
+                'end_time={end_time}, '
+                'errors={errors}, '
+                'c2s_result={c2s_result}, '
+                's2c_result={s2c_result}, '
+                'latency={latency}, '
+                'os={os}, '
+                'os_version={os_version}, '
+                'client={client}, '
+                'client_version={client_version}, '
+                'browser={browser}, '
+                'browser_version={browser_version}]').format(
+                    start_time=self.start_time,
+                    end_time=self.end_time,
+                    errors=[str(e) for e in self.errors],
+                    c2s_result=str(self.c2s_result),
+                    s2c_result=str(self.s2c_result),
+                    latency=self.latency,
+                    os=self.os,
+                    os_version=self.os_version,
+                    client=self.client,
+                    client_version=self.client_version,
+                    browser=self.browser,
+                    browser_version=self.browser_version)
