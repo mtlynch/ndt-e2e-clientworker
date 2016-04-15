@@ -21,7 +21,8 @@ class NdtSingleTestResult(object):
     """Result of a single NDT test.
 
     Attributes:
-        throughput: The final recorded throughput (in Mbps).
+        throughput: The final recorded throughput (in Mbps) (or None if the test
+            did not complete).
         start_time: The datetime when the test began (or None if the test
             never began).
         end_time: The datetime when the test competed (or None if the test
@@ -42,11 +43,11 @@ class NdtSingleTestResult(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return ('{{throughput={throughput}, '
+        return ('[throughput={throughput}, '
                 'start_time={start_time}, '
-                'end_time={end_time}}}').format(throughput=self.throughput,
-                                                start_time=self.start_time,
-                                                end_time=self.end_time)
+                'end_time={end_time}]').format(throughput=self.throughput,
+                                               start_time=self.start_time,
+                                               end_time=self.end_time)
 
 
 class TestError(object):
@@ -69,7 +70,7 @@ class TestError(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return '{{message={message}, timestamp={timestamp}}}'.format(
+        return '[message={message}, timestamp={timestamp}]'.format(
             message=self.message,
             timestamp=self.timestamp)
 
@@ -95,10 +96,8 @@ class NdtResult(object):
             fatal error in the client.
         errors: A list of TestError objects representing any errors encountered
             during the tests (or an empty list if all tests were successful).
-        c2s_result: The NdtSingleResult for the c2s (upload) test (or None if no
-            result was recorded).
-        s2c_result: The NdtSingleResult for the s2c (download) test (or None if
-            no result was recorded).
+        c2s_result: The NdtSingleResult for the c2s (upload) test.
+        s2c_result: The NdtSingleResult for the s2c (download) test.
         latency: The reported latency (in milliseconds) or None if the test did
             not complete.
         os: Name of OS in which the test ran (e.g. "Windows").
@@ -155,7 +154,7 @@ class NdtResult(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return ('{{start_time={start_time}, '
+        return ('[start_time={start_time}, '
                 'end_time={end_time}, '
                 'errors={errors}, '
                 'c2s_result={c2s_result}, '
@@ -166,7 +165,7 @@ class NdtResult(object):
                 'client={client}, '
                 'client_version={client_version}, '
                 'browser={browser}, '
-                'browser_version={browser_version}}}').format(
+                'browser_version={browser_version}]').format(
                     start_time=self.start_time,
                     end_time=self.end_time,
                     errors=[str(e) for e in self.errors],

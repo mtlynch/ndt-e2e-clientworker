@@ -20,7 +20,12 @@ import results
 
 
 class NdtResultDecoder(json.JSONDecoder):
-    """Decodes a JSON string into an NdtResult instance."""
+    """Decodes a JSON string into an NdtResult instance.
+
+    The decoder assumes that the input is valid JSON and that the JSON
+    represents a valid NdtResult (where all required fields are defined and all
+    defined fields have legal values).
+    """
 
     def __init__(self):
         json.JSONDecoder.__init__(self, object_hook=_dict_to_object)
