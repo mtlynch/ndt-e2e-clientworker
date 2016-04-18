@@ -3,13 +3,11 @@ import json
 import BaseHTTPServer
 
 
-
-
 class FakeMLabNsServer(BaseHTTPServer.HTTPServer):
 
     def __init__(self, ndt_server_fqdn):
         BaseHTTPServer.HTTPServer.__init__(self, ('', 0), _FakeMLabNsHandler)
-        self._port = self.socket.getsockname()[1]
+        self._port = self.server_address[1]
         self._ndt_server_fqdn = ndt_server_fqdn
 
     @property
@@ -35,12 +33,6 @@ class _FakeMLabNsHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         }
         self.wfile.write(json.dumps(response))
 
-
-if __name__ == '__main__':
-    httpd = FakeMLabNsServer('iupui.ndt.foo.com')
-    print time.asctime(), "Server Starts - :%s" % (HOST_NAME, httpd.port)
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
+    def log_message(self, unused_format, *unused_args):
+        """Silence console output."""
         pass
-    httpd.server_close()
