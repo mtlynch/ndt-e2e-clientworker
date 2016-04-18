@@ -1,38 +1,46 @@
 import time
+import json
 import BaseHTTPServer
 
-HOST_NAME = ''
-PORT_NUMBER = 8123
 
 
-class FakeMLabNsHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+class FakeMLabNsServer(BaseHTTPServer.HTTPServer):
+
+    def __init__(self, ndt_server_fqdn):
+        BaseHTTPServer.HTTPServer.__init__(self, ('', 0), _FakeMLabNsHandler)
+        self._port = self.socket.getsockname()[1]
+        self._ndt_server_fqdn = ndt_server_fqdn
+
+    @property
+    def ndt_server_fqdn(self):
+        return self._ndt_server_fqdn
+
+    @property
+    def port(self):
+        return self._port
+
+class _FakeMLabNsHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        self.wfile.write("""{
-            "ip": ["1.2.3.4"],
-            "country": "US", '
-            "city": "Washington_DC",
-            "fqdn": "%s",
-            "site": "iad0t"
-            }""" % self.server.ndt_server_fqdn)
-
-
-class FakeMLabNsServer(BaseHTTPServer.HTTPServer):
-
-    def __init__(self, server_address, RequestHandlerClass, ndt_server_fqdn):
-        BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass)
-        self.ndt_server_fqdn = ndt_server_fqdn
+        response = {
+            'ip': ['1.2.3.4'],
+            'country': 'US',
+            'city': 'Washington_DC',
+            'fqdn': self.server.ndt_server_fqdn,
+            'site': 'iad0t'
+        }
+        self.wfile.write(json.dumps(response))
 
 
 if __name__ == '__main__':
-    httpd = FakeMLabNsServer((HOST_NAME, PORT_NUMBER), FakeMLabNsHandler, 'iupui.ndt.foo.com')
-    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
+    httpd = FakeMLabNsServer('iupui.ndt.foo.com')
+    print time.asctime(), "Server Starts - :%s" % (HOST_NAME, httpd.port)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
-    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
