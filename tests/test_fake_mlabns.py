@@ -36,8 +36,10 @@ class FakeMLabNsServerTest(unittest.TestCase):
     def test_server_returns_correct_fqdn(self):
         self.server = fake_mlabns.FakeMLabNsServer('ndt.mock-server.com')
         threading.Thread(target=self.server.serve_forever).start()
-        response_actual = urllib2.urlopen('http://127.0.0.1:%d/ndt_ssl' %
-                                          self.server.port).read()
+
+        urlopen_response = urllib2.urlopen('http://127.0.0.1:%d/ndt_ssl' %
+                                           self.server.port)
+        response_actual = urlopen_response.read()
         response_expected = """{
             "fqdn": "ndt.mock-server.com",
             "ip": ["1.2.3.4"],
@@ -47,3 +49,6 @@ class FakeMLabNsServerTest(unittest.TestCase):
             }"""
 
         self.assertJsonEqual(response_expected, response_actual)
+        headers_actual = urlopen_response.info().getheader
+        self.assertEqual('application/json', headers_actual('Content-type'))
+        self.assertEqual('*', headers_actual('Access-Control-Allow-Origin'))
