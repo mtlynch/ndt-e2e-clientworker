@@ -28,7 +28,8 @@ import os_metadata
 def main(args):
     if args.client == names.BANJO:
         fake_mlabns_server = fake_mlabns.FakeMLabNsServer(args.server)
-        print 'starting fake mlab-ns server on port %d' % fake_mlabns_server.port
+        print 'starting fake mlab-ns server on port %d' % (
+            fake_mlabns_server.port)
         with contextlib.closing(http_server.ReplayHTTPServer(
                 args.replay_port, fake_mlabns_server, args.client_path)):
             print 'replay server replaying %s on port %d' % (args.client_path,
