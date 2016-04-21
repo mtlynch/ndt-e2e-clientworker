@@ -19,6 +19,7 @@ testing system to identify NDT clients, browsers, and operating systems.
 
 # NDT client shortnames
 NDT_HTML5 = 'ndt_js'  # Official NDT HTML5 reference client
+BANJO = 'banjo'
 
 # Browser name constants
 FIREFOX = 'firefox'

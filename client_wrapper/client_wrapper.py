@@ -13,29 +13,54 @@
 # limitations under the License.
 
 import argparse
+import contextlib
 import os
 
+import fake_mlabns
 import filename
 import html5_driver
+import http_server
 import names
 import result_encoder
 import os_metadata
 
 
 def main(args):
+    if args.client == names.BANJO:
+        fake_mlabns_server = fake_mlabns.FakeMLabNsServer(args.server)
+        print 'starting fake mlab-ns server on port %d' % fake_mlabns_server.port
+        with contextlib.closing(http_server.ReplayHTTPServer(
+                args.replay_port, fake_mlabns_server, args.client_path)):
+            print 'replay server replaying %s on port %d' % (args.client_path,
+                                                             args.replay_port)
+            raise NotImplementedError('Banjo driver is not yet implemented')
     if args.client == names.NDT_HTML5:
         driver = html5_driver.NdtHtml5SeleniumDriver(args.browser,
                                                      args.client_url,
                                                      timeout=20)
+        _run_test_iterations(driver, args.iterations, args.output)
     else:
         raise ValueError('unsupported NDT client: %s' % args.client)
 
-    for i in range(args.iterations):
+
+def _run_test_iterations(driver, iterations, output_dir):
+    """Use the given client driver to run the specified number of iterations.
+
+    Given an NDT client driver, run NDT tests for the given number of
+    iterations. On completion of each test, save the result to disk and print
+    the result to the console.
+
+    Args:
+        driver: An NDT client driver that supports the perform_test API.
+        iterations: The total number of test iterations to run.
+        output_dir: Directory in which to result file.
+    """
+    for i in range(iterations):
         print 'starting iteration %d...' % (i + 1)
         result = driver.perform_test()
         result.os, result.os_version = os_metadata.get_os_metadata()
         print _jsonify_result(result)
-        _save_result(result, args.output)
+        _save_result(result, output_dir)
 
 
 def _save_result(result, output_dir):
@@ -65,13 +90,22 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--client',
                         help='NDT client implementation to run',
-                        choices=(names.NDT_HTML5,),
+                        choices=(names.NDT_HTML5, names.BANJO),
                         required=True)
     parser.add_argument('--browser',
                         help='Browser to run under (for browser-based client)',
                         choices=('chrome', 'firefox', 'safari', 'edge'))
+    parser.add_argument('--client_path',
+                        help=('Path to client files. Depending on the type of '
+                              'client, these can be replay files, static HTML '
+                              'files (not implemented), or a client binary '
+                              '(not implemented)'))
     parser.add_argument('--client_url',
                         help='URL of NDT client (for server-hosted clients)')
+    parser.add_argument('--server', help='FQDN of NDT server to test against')
+    parser.add_argument('--replay_port',
+                        help='Port to listen on for replay server',
+                        default=8888)
     parser.add_argument('--output', help='Directory in which to write output')
     parser.add_argument('--iterations',
                         help='Number of iterations to run',
