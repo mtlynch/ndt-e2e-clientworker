@@ -60,6 +60,9 @@ class _FakeMLabNsHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        # Allow CORS requests, so that we can query the fake mlab-ns server from
+        # different origins (e.g. different localhost:port combinations).
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         response = {
             'ip': ['1.2.3.4'],
