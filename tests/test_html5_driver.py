@@ -18,6 +18,7 @@ import unittest
 
 import mock
 import pytz
+from selenium import webdriver
 from selenium.common import exceptions
 from client_wrapper import html5_driver
 
@@ -64,11 +65,11 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
 
         self.mock_driver.find_elements_by_xpath = mock_find_elements_by_xpath
 
-        firefox_patcher = mock.patch.object(html5_driver.webdriver, 'Firefox')
+        firefox_patcher = mock.patch.object(webdriver, 'Firefox')
         self.addCleanup(firefox_patcher.stop)
         firefox_patcher.start()
 
-        html5_driver.webdriver.Firefox.return_value = self.mock_driver
+        webdriver.Firefox.return_value = self.mock_driver
 
     def assertErrorMessagesEqual(self, expected_messages, actual_errors):
         """Verifies that a list of TestErrors have the expected error messages.
@@ -130,14 +131,6 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
 
         self.assertErrorMessagesEqual(
             [html5_driver.ERROR_C2S_NEVER_STARTED], result.errors)
-
-    def test_unrecognized_browser_raises_error(self):
-        selenium_driver = html5_driver.NdtHtml5SeleniumDriver(
-            browser='not_a_browser',
-            url='http://ndt.mock-server.com:7123',
-            timeout=1)
-        with self.assertRaises(ValueError):
-            selenium_driver.perform_test()
 
     def test_results_page_displays_non_numeric_latency(self):
         self.mock_page_elements['latency'] = mock.Mock(text='Non-numeric value')
@@ -244,45 +237,6 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
         self.assertErrorMessagesEqual(
             ['Invalid throughput unit specified: banana'], result.errors)
 
-    @mock.patch.object(html5_driver.webdriver, 'Chrome')
-    def test_chrome_driver_can_be_used_for_test(self, mock_chrome):
-        mock_chrome.return_value = self.mock_driver
-        result = html5_driver.NdtHtml5SeleniumDriver(
-            browser='chrome',
-            url='http://ndt.mock-server.com:7123/',
-            timeout=1000).perform_test()
-
-        self.assertEqual(1.0, result.c2s_result.throughput)
-        self.assertEqual(2.0, result.s2c_result.throughput)
-        self.assertEqual(3.0, result.latency)
-        self.assertErrorMessagesEqual([], result.errors)
-
-    @mock.patch.object(html5_driver.webdriver, 'Edge')
-    def test_edge_driver_can_be_used_for_test(self, mock_edge):
-        mock_edge.return_value = self.mock_driver
-        result = html5_driver.NdtHtml5SeleniumDriver(
-            browser='edge',
-            url='http://ndt.mock-server.com:7123/',
-            timeout=1000).perform_test()
-
-        self.assertEqual(1.0, result.c2s_result.throughput)
-        self.assertEqual(2.0, result.s2c_result.throughput)
-        self.assertEqual(3.0, result.latency)
-        self.assertErrorMessagesEqual([], result.errors)
-
-    @mock.patch.object(html5_driver.webdriver, 'Safari')
-    def test_safari_driver_can_be_used_for_test(self, mock_safari):
-        mock_safari.return_value = self.mock_driver
-        result = html5_driver.NdtHtml5SeleniumDriver(
-            browser='safari',
-            url='http://ndt.mock-server.com:7123/',
-            timeout=1000).perform_test()
-
-        self.assertEqual(1.0, result.c2s_result.throughput)
-        self.assertEqual(2.0, result.s2c_result.throughput)
-        self.assertEqual(3.0, result.latency)
-        self.assertErrorMessagesEqual([], result.errors)
-
     def test_c2s_kbps_speed_conversion(self):
         """Test c2s speed converts from kb/s to Mb/s correctly."""
         # If c2s speed is 72 kb/s and s2c speed is 34 in the browser
@@ -320,7 +274,7 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
                 datetime.datetime.now(pytz.utc)
                 return self.mock_driver
 
-            html5_driver.webdriver.Firefox.side_effect = mock_firefox
+            webdriver.Firefox.side_effect = mock_firefox
 
             # Modify the visibility_of mock to increment the clock forward one
             # call.
