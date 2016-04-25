@@ -18,9 +18,6 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support import ui
 
 import names
-import results
-
-ERROR_FAILED_TO_LOAD_URL_FORMAT = 'Failed to load URL: %s'
 
 # TODO(mtlynch): Define all error strings as public constants so we're not
 # duplicating strings between production code and unit test code.

@@ -17,6 +17,7 @@ import unittest
 
 import mock
 import pytz
+from selenium import webdriver
 from selenium.common import exceptions
 from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
@@ -253,8 +254,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
                 datetime.datetime.now(pytz.utc)
                 return self.mock_driver
 
-            browser_client_common.create_browser.side_effect = (
-                mock_create_browser)
+            webdriver.Firefox.side_effect = mock_firefox
 
             # Modify the wait_until_element_is_visible mock to increment the
             # clock forward one call.

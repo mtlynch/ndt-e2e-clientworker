@@ -66,6 +66,25 @@ class NdtHtml5SeleniumDriver(object):
         return result
 
 
+def _load_url(driver, url, result):
+    """Loads the URL in a Selenium driver for an NDT test.
+
+    Args:
+        driver: An instance of a Selenium webdriver.
+        url: The The URL of an NDT server to test against.
+        result: An instance of NdtResult.
+
+    Returns:
+        True if loading the URL was successful, False if otherwise.
+    """
+    try:
+        driver.get(url)
+    except exceptions.WebDriverException:
+        result.errors.append(results.TestError('Failed to load test UI.'))
+        return False
+    return True
+
+
 def _complete_ui_flow(driver, url, timeout, result):
     """Performs the UI flow for the NDT HTML5 test and records results.
 
