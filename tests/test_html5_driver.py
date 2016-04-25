@@ -248,7 +248,8 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
             # now().
             mocked_datetime.now.side_effect = times
 
-            # Modify the Firefox mock to increment the clock forward one call.
+            # Modify the create_browser mock to increment the clock forward one
+            # call.
             def mock_create_browser(unused_browser_name):
                 datetime.datetime.now(pytz.utc)
                 return self.mock_driver
