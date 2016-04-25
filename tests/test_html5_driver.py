@@ -18,8 +18,8 @@ import unittest
 
 import mock
 import pytz
-from selenium import webdriver
 from selenium.common import exceptions
+from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
 
 
@@ -65,11 +65,12 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
 
         self.mock_driver.find_elements_by_xpath = mock_find_elements_by_xpath
 
-        firefox_patcher = mock.patch.object(webdriver, 'Firefox')
-        self.addCleanup(firefox_patcher.stop)
-        firefox_patcher.start()
+        create_browser_patcher = mock.patch.object(browser_client_common,
+                                                   'create_browser')
+        self.addCleanup(create_browser_patcher.stop)
+        create_browser_patcher.start()
 
-        webdriver.Firefox.return_value = self.mock_driver
+        browser_client_common.create_browser.return_value = self.mock_driver
 
     def assertErrorMessagesEqual(self, expected_messages, actual_errors):
         """Verifies that a list of TestErrors have the expected error messages.
@@ -270,11 +271,12 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
             mocked_datetime.now.side_effect = times
 
             # Modify the Firefox mock to increment the clock forward one call.
-            def mock_firefox():
+            def mock_create_browser(unused_browser_name):
                 datetime.datetime.now(pytz.utc)
                 return self.mock_driver
 
-            webdriver.Firefox.side_effect = mock_firefox
+            browser_client_common.create_browser.side_effect = (
+                mock_create_browser)
 
             # Modify the visibility_of mock to increment the clock forward one
             # call.
