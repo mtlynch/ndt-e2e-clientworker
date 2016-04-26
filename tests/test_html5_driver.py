@@ -21,9 +21,10 @@ import pytz
 from selenium.common import exceptions
 from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
+from tests import ndt_client_test
 
 
-class NdtHtml5SeleniumDriverTest(unittest.TestCase):
+class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
 
     def setUp(self):
         visibility_patcher = mock.patch.object(html5_driver.expected_conditions,
@@ -72,14 +73,6 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
 
         browser_client_common.create_browser.return_value = self.mock_driver
 
-    def assertErrorMessagesEqual(self, expected_messages, actual_errors):
-        """Verifies that a list of TestErrors have the expected error messages.
-
-        Note that this compares just by message text and ignores timestamp.
-        """
-        actual_messages = [e.message for e in actual_errors]
-        self.assertListEqual(expected_messages, actual_messages)
-
     def test_test_yields_valid_results_when_all_page_elements_are_expected_values(
             self):
         result = html5_driver.NdtHtml5SeleniumDriver(
@@ -91,16 +84,6 @@ class NdtHtml5SeleniumDriverTest(unittest.TestCase):
         self.assertEqual(2.0, result.s2c_result.throughput)
         self.assertEqual(3.0, result.latency)
         self.assertErrorMessagesEqual([], result.errors)
-
-    def test_invalid_URL_throws_error(self):
-        self.mock_driver.get.side_effect = (
-            exceptions.WebDriverException('Failed to load test UI.'))
-        result = html5_driver.NdtHtml5SeleniumDriver(browser='firefox',
-                                                     url='invalid_url',
-                                                     timeout=1).perform_test()
-
-        self.assertErrorMessagesEqual(
-            ['Failed to load test UI.'], result.errors)
 
     def test_test_in_progress_timeout_yields_timeout_errors(self):
         """If each test times out, expect an error for each timeout."""

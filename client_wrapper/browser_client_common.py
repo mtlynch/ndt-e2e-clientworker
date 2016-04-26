@@ -13,8 +13,12 @@
 # limitations under the License.
 
 from selenium import webdriver
+from selenium.common import exceptions
 
 import names
+import results
+
+ERROR_FAILED_TO_LOAD_URL_FORMAT = 'Failed to load URL: %s'
 
 
 def create_browser(browser):
@@ -36,3 +40,23 @@ def create_browser(browser):
     elif browser == names.SAFARI:
         return webdriver.Safari()
     raise ValueError('Invalid browser specified: %s' % browser)
+
+
+def load_url(driver, url, errors):
+    """Loads the URL in a Selenium driver for an NDT test.
+
+    Args:
+        driver: An instance of a Selenium webdriver.
+        url: The URL to load.
+        errors: A list of errors that will be appended to if the URL cannot be
+            loaded.
+
+    Returns:
+        True if loading the URL was successful.
+    """
+    try:
+        driver.get(url)
+    except exceptions.WebDriverException:
+        errors.append(results.TestError(ERROR_FAILED_TO_LOAD_URL_FORMAT % url))
+        return False
+    return True
