@@ -15,7 +15,6 @@ from __future__ import absolute_import
 import unittest
 
 import mock
-from selenium import webdriver
 
 from client_wrapper import browser_client_common
 from client_wrapper import names
@@ -24,7 +23,7 @@ from client_wrapper import names
 class CreateBrowserTest(unittest.TestCase):
     """Tests for create_browser function."""
 
-    @mock.patch.object(webdriver, 'Firefox')
+    @mock.patch.object(browser_client_common.webdriver, 'Firefox')
     def test_create_firefox_browser_succeeds(self, mock_firefox):
         mock_firefox.return_value = 'mock firefox driver'
 
@@ -32,7 +31,7 @@ class CreateBrowserTest(unittest.TestCase):
                          browser_client_common.create_browser(names.FIREFOX))
         self.assertTrue(mock_firefox.called)
 
-    @mock.patch.object(webdriver, 'Chrome')
+    @mock.patch.object(browser_client_common.webdriver, 'Chrome')
     def test_create_chrome_browser_succeeds(self, mock_chrome):
         mock_chrome.return_value = 'mock chrome driver'
 
@@ -40,7 +39,7 @@ class CreateBrowserTest(unittest.TestCase):
                          browser_client_common.create_browser(names.CHROME))
         self.assertTrue(mock_chrome.called)
 
-    @mock.patch.object(webdriver, 'Edge')
+    @mock.patch.object(browser_client_common.webdriver, 'Edge')
     def test_create_edge_driver_succeeds(self, mock_edge):
         mock_edge.return_value = 'mock edge driver'
 
@@ -48,7 +47,7 @@ class CreateBrowserTest(unittest.TestCase):
                          browser_client_common.create_browser(names.EDGE))
         self.assertTrue(mock_edge.called)
 
-    @mock.patch.object(webdriver, 'Safari')
+    @mock.patch.object(browser_client_common.webdriver, 'Safari')
     def test_create_safari_browser_succeeds(self, mock_safari):
         mock_safari.return_value = 'mock safari driver'
 
