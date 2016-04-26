@@ -18,6 +18,9 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support import ui
 
 import names
+import results
+
+ERROR_FAILED_TO_LOAD_URL_FORMAT = 'Failed to load URL: %s'
 
 # TODO(mtlynch): Define all error strings as public constants so we're not
 # duplicating strings between production code and unit test code.
@@ -46,6 +49,26 @@ def create_browser(browser):
     elif browser == names.SAFARI:
         return webdriver.Safari()
     raise ValueError('Invalid browser specified: %s' % browser)
+
+
+def load_url(driver, url, errors):
+    """Loads the URL in a Selenium driver for an NDT test.
+
+    Args:
+        driver: An instance of a Selenium webdriver.
+        url: The URL to load.
+        errors: A list of errors that will be appended to if the URL cannot be
+            loaded.
+
+    Returns:
+        True if loading the URL was successful.
+    """
+    try:
+        driver.get(url)
+    except exceptions.WebDriverException:
+        errors.append(results.TestError(ERROR_FAILED_TO_LOAD_URL_FORMAT % url))
+        return False
+    return True
 
 
 def wait_until_element_is_visible(driver, element, timeout):
