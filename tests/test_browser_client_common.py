@@ -19,7 +19,6 @@ from selenium.common import exceptions
 
 from client_wrapper import browser_client_common
 from client_wrapper import names
-from tests import ndt_client_test
 
 
 class CreateBrowserTest(unittest.TestCase):
@@ -84,7 +83,7 @@ class LoadUrlTest(ndt_client_test.NdtClientTest):
             ['Failed to load URL: http://fake.url/foo'], errors)
 
 
-class WaitUntilElementIsVisibleTest(ndt_client_test.NdtClientTest):
+class WaitUntilElementIsVisibleTest(unittest.TestCase):
     """Tests for wait_until_element_is_visible function."""
 
     @mock.patch.object(browser_client_common.ui, 'WebDriverWait')
@@ -131,7 +130,7 @@ class WaitUntilElementIsVisibleTest(ndt_client_test.NdtClientTest):
             mock_driver, mock_element, 20))
 
 
-class GetElementContainingTextTest(ndt_client_test.NdtClientTest):
+class GetElementContainingTextTest(unittest.TestCase):
     """Tests for get_element_containing_text function."""
 
     def test_get_element_containing_text_finds_correct_element_when_element_exists(
