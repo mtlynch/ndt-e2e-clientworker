@@ -15,9 +15,11 @@ from __future__ import absolute_import
 import unittest
 
 import mock
+from selenium.common import exceptions
 
 from client_wrapper import browser_client_common
 from client_wrapper import names
+from tests import ndt_client_test
 
 
 class CreateBrowserTest(unittest.TestCase):
@@ -58,6 +60,28 @@ class CreateBrowserTest(unittest.TestCase):
     def test_create_unrecognized_browser_raises_error(self):
         with self.assertRaises(ValueError):
             browser_client_common.create_browser('not a real browser name')
+
+
+class LoadUrlTest(ndt_client_test.NdtClientTest):
+    """Tests for load_url function."""
+
+    def test_load_url_loads_correct_url(self):
+        mock_driver = mock.Mock(spec=browser_client_common.webdriver.Firefox)
+        errors = []
+        self.assertTrue(browser_client_common.load_url(
+            mock_driver, 'http://fake.url/foo', errors))
+        self.assertListEqual([], errors)
+        mock_driver.get.assert_called_once_with('http://fake.url/foo')
+
+    def test_load_url_adds_error_when_loading_url_fails(self):
+        mock_driver = mock.Mock(spec=browser_client_common.webdriver.Firefox)
+        mock_driver.get.side_effect = exceptions.WebDriverException(
+            'dummy exception')
+        errors = []
+        self.assertFalse(browser_client_common.load_url(
+            mock_driver, 'http://fake.url/foo', errors))
+        self.assertErrorMessagesEqual(
+            ['Failed to load URL: http://fake.url/foo'], errors)
 
 
 if __name__ == '__main__':
