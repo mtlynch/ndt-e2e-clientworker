@@ -17,11 +17,11 @@ import contextlib
 import datetime
 
 import pytz
-from selenium import webdriver
 from selenium.webdriver.support import ui
 from selenium.webdriver.support import expected_conditions
 from selenium.common import exceptions
 
+import browser_client_common
 import names
 import results
 
@@ -57,7 +57,8 @@ class NdtHtml5SeleniumDriver(object):
         result.client = names.NDT_HTML5
         result.start_time = datetime.datetime.now(pytz.utc)
 
-        with contextlib.closing(_create_browser(self._browser)) as driver:
+        with contextlib.closing(browser_client_common.create_browser(
+                self._browser)) as driver:
             result.browser = self._browser
             result.browser_version = driver.capabilities['version']
 
@@ -65,27 +66,6 @@ class NdtHtml5SeleniumDriver(object):
 
         result.end_time = datetime.datetime.now(pytz.utc)
         return result
-
-
-def _create_browser(browser):
-    """Creates browser for an NDT test.
-
-    Args:
-        browser: Can be one of 'firefox', 'chrome', 'edge', or 'safari'
-
-    Returns:
-        An instance of a Selenium webdriver browser class corresponding to
-        the specified browser.
-    """
-    if browser == names.FIREFOX:
-        return webdriver.Firefox()
-    elif browser == names.CHROME:
-        return webdriver.Chrome()
-    elif browser == names.EDGE:
-        return webdriver.Edge()
-    elif browser == names.SAFARI:
-        return webdriver.Safari()
-    raise ValueError('Invalid browser specified: %s' % browser)
 
 
 def _load_url(driver, url, result):
