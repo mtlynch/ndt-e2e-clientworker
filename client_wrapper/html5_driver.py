@@ -17,8 +17,6 @@ import contextlib
 import datetime
 
 import pytz
-from selenium.webdriver.support import ui
-from selenium.webdriver.support import expected_conditions
 from selenium.common import exceptions
 
 import browser_client_common
@@ -99,7 +97,6 @@ def _complete_ui_flow(driver, url, timeout, result):
             through the UI flow.
     """
     if not _load_url(driver, url, result):
-
         return
 
     _click_start_button(driver)
@@ -109,18 +106,21 @@ def _complete_ui_flow(driver, url, timeout, result):
     if _wait_for_c2s_test_to_start(driver, timeout):
         result.c2s_result.start_time = datetime.datetime.now(pytz.utc)
     else:
-        result.errors.append(results.TestError(ERROR_C2S_NEVER_STARTED))
+        result.errors.append(results.TestError(
+            browser_client_common.ERROR_C2S_NEVER_STARTED))
 
     if _wait_for_s2c_test_to_start(driver, timeout):
         result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
         result.s2c_result.start_time = datetime.datetime.now(pytz.utc)
     else:
-        result.errors.append(results.TestError(ERROR_S2C_NEVER_STARTED))
+        result.errors.append(results.TestError(
+            browser_client_common.ERROR_S2C_NEVER_STARTED))
 
     if _wait_for_results_page_to_appear(driver, timeout):
         result.s2c_result.end_time = datetime.datetime.now(pytz.utc)
     else:
-        result.errors.append(results.TestError(ERROR_S2C_NEVER_ENDED))
+        result.errors.append(results.TestError(
+            browser_client_common.ERROR_S2C_NEVER_ENDED))
 
     _populate_metric_values(result, driver)
 
@@ -132,49 +132,31 @@ def _click_start_button(driver):
         driver: An instance of a Selenium webdriver browser class.
     """
     driver.find_element_by_id('websocketButton').click()
-
-    start_button = driver.find_elements_by_xpath(
-        "//*[contains(text(), 'Start Test')]")[0]
-    start_button.click()
+    # TODO(mtlynch): Handle case when element is not found.
+    browser_client_common.find_element_containing_text(driver,
+                                                       'Start Test').click()
 
 
 def _wait_for_c2s_test_to_start(driver, timeout):
     # Wait until the 'Now Testing your upload speed' banner is displayed.
-    upload_speed_text = driver.find_elements_by_xpath(
-        "//*[contains(text(), 'your upload speed')]")[0]
-    return _wait_until_element_is_visible(driver, upload_speed_text, timeout)
+    upload_speed_element = browser_client_common.find_element_containing_text(
+        driver, 'your upload speed')
+    return browser_client_common.wait_until_element_is_visible(
+        driver, upload_speed_element, timeout)
 
 
 def _wait_for_s2c_test_to_start(driver, timeout):
     # Wait until the 'Now Testing your download speed' banner is displayed.
-    download_speed_text = driver.find_elements_by_xpath(
-        "//*[contains(text(), 'your download speed')]")[0]
-    return _wait_until_element_is_visible(driver, download_speed_text, timeout)
+    download_speed_element = browser_client_common.find_element_containing_text(
+        driver, 'your download speed')
+    return browser_client_common.wait_until_element_is_visible(
+        driver, download_speed_element, timeout)
 
 
 def _wait_for_results_page_to_appear(driver, timeout):
-    results_text = driver.find_element_by_id('results')
-    return _wait_until_element_is_visible(driver, results_text, timeout)
-
-
-def _wait_until_element_is_visible(driver, element, timeout):
-    """Waits until a DOM element is visible within a given timeout.
-
-    Args:
-        driver: An instance of a Selenium webdriver browser class.
-        element: A selenium webdriver element.
-        timeout: The maximum time to wait (in seconds).
-
-    Returns:
-        True if the element became visible within the timeout.
-    """
-    try:
-        ui.WebDriverWait(
-            driver,
-            timeout=timeout).until(expected_conditions.visibility_of(element))
-    except exceptions.TimeoutException:
-        return False
-    return True
+    results_element = driver.find_element_by_id('results')
+    return browser_client_common.wait_until_element_is_visible(
+        driver, results_element, timeout)
 
 
 def _populate_metric_values(result, driver):
