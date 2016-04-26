@@ -84,5 +84,73 @@ class LoadUrlTest(ndt_client_test.NdtClientTest):
             ['Failed to load URL: http://fake.url/foo'], errors)
 
 
+class WaitUntilElementIsVisibleTest(ndt_client_test.NdtClientTest):
+    """Tests for wait_until_element_is_visible function."""
+
+    @mock.patch.object(browser_client_common.ui, 'WebDriverWait')
+    @mock.patch.object(browser_client_common.expected_conditions,
+                       'visibility_of')
+    def test_wait_until_element_is_visible_waits_for_correct_element(
+            self, mock_visibility, mock_webdriver_wait):
+        # Mock wait object to be returned by ui.WebDriverWait
+        mock_wait = mock.Mock()
+        mock_webdriver_wait.return_value = mock_wait
+
+        # In reality, these would be objects, but we mock with strings for
+        # simplicity.
+        mock_driver = 'mock driver'
+        mock_element = 'mock DOM element'
+        mock_condition = 'mock expected condition'
+
+        browser_client_common.expected_conditions.visibility_of.return_value = mock_condition
+
+        # Verify that the function returns True when there is no timeout.
+        self.assertTrue(browser_client_common.wait_until_element_is_visible(
+            mock_driver, mock_element, 20))
+        # Verify we're waiting with the correct Selenium driver for the correct
+        # timeout.
+        mock_webdriver_wait.assert_called_once_with(mock_driver, 20)
+        # Verify we're setting the expected visibility of the right element.
+        mock_visibility.assert_called_once_with(mock_element)
+        # Verify we're waiting on the right condition.
+        mock_wait.until.assert_called_once_with(mock_condition)
+
+    @mock.patch.object(browser_client_common.ui, 'WebDriverWait')
+    def test_wait_until_element_is_visible_returns_false_when_wait_times_out(
+            self, mock_webdriver_wait):
+        mock_webdriver_wait.side_effect = exceptions.TimeoutException(
+            'mock timeout exception')
+
+        # In reality, these would be objects, but we mock with strings for
+        # simplicity.
+        mock_driver = 'mock driver'
+        mock_element = 'mock DOM element'
+
+        # Verify that the function returns False when the wait times out.
+        self.assertFalse(browser_client_common.wait_until_element_is_visible(
+            mock_driver, mock_element, 20))
+
+
+class GetElementContainingTextTest(ndt_client_test.NdtClientTest):
+    """Tests for get_element_containing_text function."""
+
+    def test_get_element_containing_text_finds_correct_element_when_element_exists(
+            self):
+        mock_driver = mock.Mock()
+        mock_driver.find_element_by_xpath.return_value = 'mock element'
+        self.assertEqual('mock element',
+                         browser_client_common.find_element_containing_text(
+                             mock_driver, 'foo'))
+        mock_driver.find_element_by_xpath.assert_called_once_with(
+            '//*[contains(text(), \'foo\')]')
+
+    def test_get_element_containing_text_returns_None_when_element_does_not_exist(
+            self):
+        mock_driver = mock.Mock()
+        mock_driver.find_element_by_xpath.return_value = None
+        self.assertIsNone(browser_client_common.find_element_containing_text(
+            mock_driver, 'foo'))
+
+
 if __name__ == '__main__':
     unittest.main()
