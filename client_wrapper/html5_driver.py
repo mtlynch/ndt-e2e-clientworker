@@ -28,7 +28,8 @@ ERROR_C2S_NEVER_STARTED = 'Timed out waiting for c2s test to begin.'
 ERROR_S2C_NEVER_STARTED = 'Timed out waiting for c2s test to begin.'
 ERROR_S2C_NEVER_ENDED = 'Timed out waiting for c2s test to end.'
 ERROR_START_BUTTON_NOT_IN_DOM = '"Start Test" button does not appear in DOM.'
-ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON = 'Timed out waiting for "Start Test" button to appear.'
+ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON = (
+    'Timed out waiting for "Start Test" button to appear.')
 
 
 class NdtHtml5SeleniumDriver(object):
