@@ -119,7 +119,10 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
         """If each test times out, expect an error for each timeout."""
         # Make the "Start Test" button visible, but others time out.
         html5_driver.browser_client_common.wait_until_element_is_visible.side_effect = [
-            True, False, False, False
+            True,  # "Start Test" button
+            False,  # Upload speed label
+            False,  # Download speed label
+            False,  # Results div
         ]
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
@@ -134,7 +137,10 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
     def test_c2s_start_timeout_yields_errors(self):
         """If waiting for just c2s start times out, expect just one error."""
         html5_driver.browser_client_common.wait_until_element_is_visible.side_effect = [
-            True, False, True, True
+            True,  # "Start Test" button
+            False,  # Upload speed label
+            True,  # Download speed label
+            True,  # Results div
         ]
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
