@@ -14,11 +14,20 @@
 
 from selenium import webdriver
 from selenium.common import exceptions
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import ui
 
 import names
 import results
 
 ERROR_FAILED_TO_LOAD_URL_FORMAT = 'Failed to load URL: %s'
+
+# TODO(mtlynch): Define all error strings as public constants so we're not
+# duplicating strings between production code and unit test code.
+ERROR_C2S_NEVER_STARTED = 'Timed out waiting for c2s test to begin.'
+ERROR_S2C_NEVER_STARTED = 'Timed out waiting for s2c test to begin.'
+ERROR_C2S_NEVER_ENDED = 'Timed out waiting for c2s test to end.'
+ERROR_S2C_NEVER_ENDED = 'Timed out waiting for s2c test to end.'
 
 
 def create_browser(browser):
@@ -60,3 +69,36 @@ def load_url(driver, url, errors):
         errors.append(results.TestError(ERROR_FAILED_TO_LOAD_URL_FORMAT % url))
         return False
     return True
+
+
+def wait_until_element_is_visible(driver, element, timeout):
+    """Waits until a DOM element is visible within a given timeout.
+
+    Args:
+        driver: An instance of a Selenium webdriver browser class.
+        element: A Selenium webdriver element.
+        timeout: The maximum time to wait (in seconds).
+
+    Returns:
+        True if the element became visible within the timeout.
+    """
+    try:
+        ui.WebDriverWait(
+            driver, timeout).until(expected_conditions.visibility_of(element))
+    except exceptions.TimeoutException:
+        return False
+    return True
+
+
+def find_element_containing_text(driver, text):
+    """Finds the element that contains the specified text in the browser DOM.
+
+    Args:
+        driver: An instance of a Selenium webdriver browser class.
+        text: Text to search for within elements.
+
+    Returns:
+        The first element in the DOM that contains the specified text, or None
+        if there are no matches.
+    """
+    return driver.find_element_by_xpath('//*[contains(text(), \'%s\')]' % text)

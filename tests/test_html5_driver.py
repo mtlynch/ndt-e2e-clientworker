@@ -13,12 +13,10 @@
 # limitations under the License.
 from __future__ import absolute_import
 import datetime
-import re
 import unittest
 
 import mock
 import pytz
-from selenium.common import exceptions
 from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
 from tests import ndt_client_test
@@ -27,14 +25,15 @@ from tests import ndt_client_test
 class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
 
     def setUp(self):
-        visibility_patcher = mock.patch.object(html5_driver.expected_conditions,
-                                               'visibility_of',
-                                               autospec=True)
-        self.addCleanup(visibility_patcher.stop)
-        visibility_patcher.start()
-
         self.mock_driver = mock.Mock()
         self.mock_driver.capabilities = {'version': 'mock_version'}
+
+        wait_until_visible_patcher = mock.patch.object(
+            html5_driver.browser_client_common, 'wait_until_element_is_visible')
+        self.addCleanup(wait_until_visible_patcher.stop)
+        wait_until_visible_patcher.start()
+        html5_driver.browser_client_common.wait_until_element_is_visible.return_value = (
+            True)
 
         # Create mock DOM elements that are returned by calls to
         # find_element_by_id.
@@ -51,26 +50,24 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
             lambda id: self.mock_page_elements[id])
 
         # Create mock DOM elements that are returned by calls to
-        # find_elements_by_xpath.
+        # find_elements_containing_text.
         self.mock_elements_by_text = {
             'Start Test': mock.Mock(),
             'your upload speed': mock.Mock(),
             'your download speed': mock.Mock(),
         }
+        create_browser_patcher = mock.patch.object(
+            browser_client_common, 'find_element_containing_text')
+        self.addCleanup(create_browser_patcher.stop)
+        create_browser_patcher.start()
+        browser_client_common.find_element_containing_text.side_effect = (
+            lambda _, text: self.mock_elements_by_text[text])
 
-        def mock_find_elements_by_xpath(xpath):
-            """Mock implementation that only supports searching by text."""
-            matching_text = re.match('^//\*\[contains\(text\(\), \'(.+)\'\)\]$',
-                                     xpath).group(1)
-            return [self.mock_elements_by_text[matching_text]]
-
-        self.mock_driver.find_elements_by_xpath = mock_find_elements_by_xpath
-
+        # Patch the call to create the browser driver to return our mock driver.
         create_browser_patcher = mock.patch.object(browser_client_common,
                                                    'create_browser')
         self.addCleanup(create_browser_patcher.stop)
         create_browser_patcher.start()
-
         browser_client_common.create_browser.return_value = self.mock_driver
 
     def test_test_yields_valid_results_when_all_page_elements_are_expected_values(
@@ -87,34 +84,30 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
 
     def test_test_in_progress_timeout_yields_timeout_errors(self):
         """If each test times out, expect an error for each timeout."""
-        with mock.patch.object(html5_driver.ui,
-                               'WebDriverWait',
-                               side_effect=exceptions.TimeoutException,
-                               autospec=True):
-            result = html5_driver.NdtHtml5SeleniumDriver(
-                browser='firefox',
-                url='http://ndt.mock-server.com:7123/',
-                timeout=1).perform_test()
+        html5_driver.browser_client_common.wait_until_element_is_visible.return_value = (
+            False)
+        result = html5_driver.NdtHtml5SeleniumDriver(
+            browser='firefox',
+            url='http://ndt.mock-server.com:7123/',
+            timeout=1).perform_test()
 
         self.assertErrorMessagesEqual(
-            [html5_driver.ERROR_C2S_NEVER_STARTED,
-             html5_driver.ERROR_S2C_NEVER_STARTED,
-             html5_driver.ERROR_S2C_NEVER_ENDED], result.errors)
+            [browser_client_common.ERROR_C2S_NEVER_STARTED,
+             browser_client_common.ERROR_S2C_NEVER_STARTED,
+             browser_client_common.ERROR_S2C_NEVER_ENDED], result.errors)
 
     def test_c2s_start_timeout_yields_errors(self):
         """If waiting for just c2s start times out, expect just one error."""
-        with mock.patch.object(html5_driver.ui,
-                               'WebDriverWait',
-                               autospec=True) as mock_wait:
-            mock_wait.side_effect = [exceptions.TimeoutException, mock.Mock(),
-                                     mock.Mock()]
-            result = html5_driver.NdtHtml5SeleniumDriver(
-                browser='firefox',
-                url='http://ndt.mock-server.com:7123/',
-                timeout=1).perform_test()
+        html5_driver.browser_client_common.wait_until_element_is_visible.side_effect = [
+            False, True, True
+        ]
+        result = html5_driver.NdtHtml5SeleniumDriver(
+            browser='firefox',
+            url='http://ndt.mock-server.com:7123/',
+            timeout=1).perform_test()
 
         self.assertErrorMessagesEqual(
-            [html5_driver.ERROR_C2S_NEVER_STARTED], result.errors)
+            [browser_client_common.ERROR_C2S_NEVER_STARTED], result.errors)
 
     def test_results_page_displays_non_numeric_latency(self):
         self.mock_page_elements['latency'] = mock.Mock(text='Non-numeric value')
@@ -262,13 +255,14 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
             browser_client_common.create_browser.side_effect = (
                 mock_create_browser)
 
-            # Modify the visibility_of mock to increment the clock forward one
-            # call.
-            def mock_visibility_of(_):
+            # Modify the wait_until_element_is_visible mock to increment the
+            # clock forward one call.
+            def mock_visibility_of(unused_driver, unused_element,
+                                   unused_timeout):
                 datetime.datetime.now(pytz.utc)
-                return mock.Mock()
+                return True
 
-            html5_driver.expected_conditions.visibility_of.side_effect = (
+            html5_driver.browser_client_common.wait_until_element_is_visible.side_effect = (
                 mock_visibility_of)
 
             result = html5_driver.NdtHtml5SeleniumDriver(
