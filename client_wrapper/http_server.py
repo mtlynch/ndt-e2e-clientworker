@@ -67,6 +67,7 @@ class ReplayHTTPServer(object):
         self._mlabns_server = mlabns_server
         self._replay_filename = replay_filename
         self._mlabns_thread = None
+        self._mlabns_serving_event = threading.Event()
         self._server_proc = None
         self._start_async()
 
@@ -75,6 +76,30 @@ class ReplayHTTPServer(object):
 
         Starts the replay HTTP server in a separate process and the fake mlab-ns
         server in a separate thread.
+        """
+        self._start_fake_mlabns_async()
+        self._start_mitmdump_async()
+
+    def _start_fake_mlabns_async(self):
+        """Start the fake mlab-ns server in a background thread.
+
+        Start the fake mlab-ns server in a background thread, but block until
+        that thread begins.
+        """
+        self._mlabns_thread = threading.Thread(target=self._start_fake_mlabns)
+        self._mlabns_thread.start()
+        self._mlabns_serving_event.wait()
+
+    def _start_fake_mlabns(self):
+        # Set the serving event to indicate that fake mlab-ns server is serving.
+        # Note: There is a race condition here, as there is a delay between the
+        # time the event is set and the time the server actually begins serving.
+        # We assume that this is good enough for now.
+        self._mlabns_serving_event.set()
+        self._mlabns_server.serve_forever()
+
+    def _start_mitmdump_async(self):
+        """Starts a mitmdump process as a reverse proxy to replay traffic.
 
         Note that it is in theory possible to launch mitmdump in pure Python
         using the mitmproxy package. We choose not to because those APIs are
@@ -104,11 +129,6 @@ class ReplayHTTPServer(object):
         mlabns_replaced = re.escape('localhost:%d' % self._mlabns_server.port)
         cmd_params.append('--replace=/~s/%s/%s' % (mlabns_original,
                                                    mlabns_replaced))
-
-        # Start the fake mlab-ns server in a background thread.
-        self._mlabns_thread = threading.Thread(
-            target=self._mlabns_server.serve_forever)
-        self._mlabns_thread.start()
 
         # Launch mitmdump in a subprocess.
         try:
