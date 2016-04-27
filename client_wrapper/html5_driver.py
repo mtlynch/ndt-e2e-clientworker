@@ -50,7 +50,7 @@ class NdtHtml5SeleniumDriver(object):
         Returns:
             A populated NdtResult object.
         """
-        result = results.NdtResult(start_time=None, end_time=None, errors=[])
+        result = results.NdtResult()
         result.client = names.NDT_HTML5
         result.start_time = datetime.datetime.now(pytz.utc)
 

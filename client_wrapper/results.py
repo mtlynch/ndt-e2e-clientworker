@@ -113,7 +113,7 @@ class NdtResult(object):
     def __init__(self,
                  start_time=None,
                  end_time=None,
-                 errors=[],
+                 errors=None,
                  c2s_result=NdtSingleTestResult(),
                  s2c_result=NdtSingleTestResult(),
                  latency=None,
@@ -127,7 +127,10 @@ class NdtResult(object):
         self.end_time = end_time
         self.c2s_result = c2s_result
         self.s2c_result = s2c_result
-        self.errors = errors
+        if errors:
+            self.errors = errors
+        else:
+            self.errors = []
         self.latency = latency
         self.os = os
         self.os_version = os_version
