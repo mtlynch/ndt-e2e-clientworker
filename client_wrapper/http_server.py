@@ -81,7 +81,7 @@ class ReplayHTTPServer(object):
         self._start_mitmdump_async()
 
     def _start_fake_mlabns_async(self):
-        """Start the fake mlab-ns server in a background thread
+        """Start the fake mlab-ns server in a background thread.
 
         Start the fake mlab-ns server in a background thread, but block until
         that thread begins.
