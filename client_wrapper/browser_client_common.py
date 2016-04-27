@@ -14,11 +14,8 @@
 
 from selenium import webdriver
 from selenium.common import exceptions
-<<<<<<< becc6dd75abfa1bdac6009391d426339c23b13b4
-=======
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support import ui
->>>>>>> Moving more common browser functions to shared module
 
 import names
 import results

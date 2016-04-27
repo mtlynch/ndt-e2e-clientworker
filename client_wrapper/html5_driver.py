@@ -17,7 +17,6 @@ import contextlib
 import datetime
 
 import pytz
-from selenium.common import exceptions
 
 import browser_client_common
 import names
