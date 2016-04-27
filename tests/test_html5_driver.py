@@ -98,9 +98,11 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
             [html5_driver.ERROR_START_BUTTON_NOT_IN_DOM], result.errors)
 
     def test_fails_gracefully_if_wait_for_start_button_times_out(self):
-        # Make the "Start Test" button visible, but others time out.
+        # Simulate a webdriver timeout when waiting for any element to appear,
+        # including the "Start Test" button.
         html5_driver.browser_client_common.wait_until_element_is_visible.return_value = (
             False)
+
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
             url='http://ndt.mock-server.com:7123/',
