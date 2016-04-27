@@ -83,6 +83,7 @@ def _complete_ui_flow(driver, url, timeout, result):
         return
 
     _click_websocket_button(driver)
+    # If we can't click the start button, nothing left to do, so bail out.
     if not _click_start_button(driver, timeout, result.errors):
         return
     result.c2s_result = results.NdtSingleTestResult()
