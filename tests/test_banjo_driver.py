@@ -29,7 +29,8 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
 
     def setUp(self):
         self.apply_patches_for_create_browser()
-        self.apply_patches_for_find_element_by_id()
+        self.define_mock_behavior_for_find_element_by_id()
+        self.define_mock_behavior_for_find_element_by_xpath()
         self.apply_patches_for_wait_until_element_is_visible()
         self.apply_patches_for_waiting_on_status_banner_text()
 
@@ -47,8 +48,8 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         create_browser_patcher.start()
         browser_client_common.create_browser.return_value = self.mock_driver
 
-    def apply_patches_for_find_element_by_id(self):
-        """Set up patches to mock find_element_by_id."""
+    def define_mock_behavior_for_find_element_by_id(self):
+        """Defines the behavior for driver's find_element_by_id method."""
         # Create mock DOM elements that are returned by calls to
         # find_element_by_id.
         self.mock_elements_by_id = {
@@ -57,6 +58,19 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         }
         self.mock_driver.find_element_by_id.side_effect = (
             lambda id: self.mock_elements_by_id[id])
+
+    def define_mock_behavior_for_find_element_by_xpath(self):
+        """Defines the behavior for driver's find_element_by_xpath method."""
+        self.mock_elements_by_xpath = {
+            '//div[@id="lrfactory-internetspeed__latency"]/*[2]':
+            mock.Mock(text='1.23 ms'),
+            '//div[@id="lrfactory-internetspeed__download"]/*[1]':
+            mock.Mock(text='4.56'),
+            '//div[@id="lrfactory-internetspeed__upload"]/*[1]':
+            mock.Mock(text='7.89'),
+        }
+        self.mock_driver.find_element_by_xpath.side_effect = (
+            lambda xpath: self.mock_elements_by_xpath[xpath])
 
     def apply_patches_for_wait_until_element_is_visible(self):
         """Set up patches for wait_until_element_is_visible."""
@@ -101,6 +115,15 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
 
         banjo_driver.expected_conditions.text_to_be_present_in_element.side_effect = (
             mock_text_to_be_present_in_element)
+
+    def test_test_yields_valid_results_when_all_page_elements_are_expected_values(
+            self):
+        result = self.banjo.perform_test()
+
+        self.assertEqual(1.23, result.latency)
+        self.assertEqual(4.56, result.s2c_result.throughput)
+        self.assertEqual(7.89, result.c2s_result.throughput)
+        self.assertErrorMessagesEqual([], result.errors)
 
     def test_test_records_error_when_run_test_button_is_not_in_dom(self):
         self.mock_elements_by_id['lrfactory-internetspeed__test_button'] = None
@@ -174,6 +197,104 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         self.assertEqual(times[4], result.c2s_result.start_time)
         self.assertEqual(times[5], result.c2s_result.end_time)
         self.assertEqual(times[6], result.end_time)
+
+    def test_errors_occur_when_results_page_displays_non_numeric_latency(self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__latency"]/*[2]'] = mock.Mock(
+                text='banana ms')
+        result = self.banjo.perform_test()
+
+        self.assertIsNone(result.latency)
+        self.assertEqual(4.56, result.s2c_result.throughput)
+        self.assertEqual(7.89, result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for latency: banana ms'], result.errors)
+
+    def test_errors_occur_when_results_page_displays_non_numeric_download_throughput(
+            self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__download"]/*[1]'] = mock.Mock(
+                text='banana')
+
+        result = self.banjo.perform_test()
+
+        self.assertEqual(1.23, result.latency)
+        self.assertIsNone(result.s2c_result.throughput)
+        self.assertEqual(7.89, result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for s2c throughput: banana'], result.errors)
+
+    def test_errors_occur_when_results_page_displays_non_numeric_upload_throughput(
+            self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__upload"]/*[1]'] = mock.Mock(
+                text='banana')
+
+        result = self.banjo.perform_test()
+
+        self.assertEqual(1.23, result.latency)
+        self.assertEqual(4.56, result.s2c_result.throughput)
+        self.assertIsNone(result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for c2s throughput: banana'], result.errors)
+
+    def test_errors_occur_when_results_page_displays_all_non_numeric_metrics(
+            self):
+        """A results page with non-numeric metrics results in error list errors.
+
+        When latency, c2s_throughput, and s2c_throughput are all non-numeric values,
+        corresponding error objects are added to the errors list that indicate
+        that each of these values is invalid.
+        """
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__latency"]/*[2]'] = mock.Mock(
+                text='apple')
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__download"]/*[1]'] = mock.Mock(
+                text='banana')
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__upload"]/*[1]'] = mock.Mock(
+                text='cherry')
+
+        result = self.banjo.perform_test()
+
+        self.assertIsNone(result.latency)
+        self.assertIsNone(result.s2c_result.throughput)
+        self.assertIsNone(result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for latency: apple',
+             'Illegal value shown for s2c throughput: banana',
+             'Illegal value shown for c2s throughput: cherry'], result.errors)
+
+    def test_records_error_when_latency_element_is_not_in_dom(self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__latency"]/*[2]'] = None
+
+        result = self.banjo.perform_test()
+
+        self.assertIsNone(result.latency)
+        self.assertErrorMessagesEqual(
+            [banjo_driver.ERROR_NO_LATENCY_FIELD], result.errors)
+
+    def test_records_error_when_download_element_is_not_in_dom(self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__download"]/*[1]'] = None
+
+        result = self.banjo.perform_test()
+
+        self.assertIsNone(result.s2c_result.throughput)
+        self.assertErrorMessagesEqual(
+            [banjo_driver.ERROR_NO_S2C_FIELD], result.errors)
+
+    def test_records_error_when_upload_element_is_not_in_dom(self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__upload"]/*[1]'] = None
+
+        result = self.banjo.perform_test()
+
+        self.assertIsNone(result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            [banjo_driver.ERROR_NO_C2S_FIELD], result.errors)
 
 
 if __name__ == '__main__':
