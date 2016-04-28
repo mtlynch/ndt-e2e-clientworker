@@ -103,7 +103,7 @@ class _BanjoUiFlowWrapper(object):
         else:
             self._add_test_error(browser_client_common.ERROR_C2S_NEVER_STARTED)
 
-        # When the latency field becomes visible in the web UI, the NDT test is
+        # When the latency field becomes visible in the web UI, the C2S test is
         # complete.
         if self._wait_for_latency_field():
             self._result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
