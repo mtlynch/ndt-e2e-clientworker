@@ -114,7 +114,7 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
             [banjo_driver.ERROR_FAILED_TO_LOCATE_RUN_TEST_BUTTON],
             result.errors)
 
-    def test_test_in_progress_timeout_yields_timeout_errors(self):
+    def test_driver_adds_errors_if_every_wait_event_times_out(self):
         """If each test times out, expect an error for each timeout."""
         self.timeout_by_text['Testing download...'] = True
         self.timeout_by_text['Waiting for upload to start...'] = True
@@ -133,7 +133,7 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
              browser_client_common.ERROR_C2S_NEVER_ENDED], result.errors)
 
     def test_download_start_timeout_yields_errors(self):
-        """If waiting for just download start times out, expect just one error."""
+        """If waiting for download start times out, expect just one error."""
         self.timeout_by_text['Testing download...'] = True
 
         result = self.banjo.perform_test()
