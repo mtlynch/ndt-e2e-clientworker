@@ -28,6 +28,8 @@ import results
 
 ERROR_FAILED_TO_LOCATE_RUN_TEST_BUTTON = (
     'Failed to locate "Run Speed Test" button.')
+# TODO(mtlynch): Refactor the following errors into browser_client_common so that
+# banjo_driver and html5_driver use the same error strings.
 ERROR_NO_LATENCY_FIELD = 'Could not find latency field.'
 ERROR_NO_S2C_FIELD = 'Could not find s2c throughput field.'
 ERROR_NO_C2S_FIELD = 'Could not find c2s throughput field.'
