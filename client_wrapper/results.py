@@ -114,8 +114,8 @@ class NdtResult(object):
                  start_time=None,
                  end_time=None,
                  errors=None,
-                 c2s_result=NdtSingleTestResult(),
-                 s2c_result=NdtSingleTestResult(),
+                 c2s_result=None,
+                 s2c_result=None,
                  latency=None,
                  os=None,
                  os_version=None,
@@ -125,12 +125,9 @@ class NdtResult(object):
                  browser_version=None):
         self.start_time = start_time
         self.end_time = end_time
-        self.c2s_result = c2s_result
-        self.s2c_result = s2c_result
-        if errors:
-            self.errors = errors
-        else:
-            self.errors = []
+        self.c2s_result = c2s_result if c2s_result else NdtSingleTestResult()
+        self.s2c_result = s2c_result if s2c_result else NdtSingleTestResult()
+        self.errors = errors if errors else []
         self.latency = latency
         self.os = os
         self.os_version = os_version
