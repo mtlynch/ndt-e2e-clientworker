@@ -18,6 +18,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support import ui
 
 import names
+import results
 
 # TODO(mtlynch): Define all error strings as public constants so we're not
 # duplicating strings between production code and unit test code.
@@ -25,6 +26,7 @@ ERROR_C2S_NEVER_STARTED = 'Timed out waiting for c2s test to begin.'
 ERROR_S2C_NEVER_STARTED = 'Timed out waiting for s2c test to begin.'
 ERROR_C2S_NEVER_ENDED = 'Timed out waiting for c2s test to end.'
 ERROR_S2C_NEVER_ENDED = 'Timed out waiting for s2c test to end.'
+ERROR_FORMAT_FAILED_TO_LOAD_URL = 'Failed to load URL: %s'
 
 
 def create_browser(browser):
@@ -63,7 +65,7 @@ def load_url(driver, url, errors):
     try:
         driver.get(url)
     except exceptions.WebDriverException:
-        errors.append(results.TestError(ERROR_FAILED_TO_LOAD_URL_FORMAT % url))
+        errors.append(results.TestError(ERROR_FORMAT_FAILED_TO_LOAD_URL % url))
         return False
     return True
 

@@ -15,9 +15,11 @@ from __future__ import absolute_import
 import unittest
 
 import mock
+from selenium.common import exceptions
 
 from client_wrapper import browser_client_common
 from client_wrapper import names
+from tests import ndt_client_test
 
 
 class CreateBrowserTest(unittest.TestCase):

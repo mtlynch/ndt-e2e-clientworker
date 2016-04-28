@@ -17,7 +17,6 @@ import unittest
 
 import mock
 import pytz
-from selenium.common import exceptions
 from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
 from tests import ndt_client_test
