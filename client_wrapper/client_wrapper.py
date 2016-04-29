@@ -38,7 +38,7 @@ def main(args):
             url = 'http://localhost:%d/' % args.replay_port
             driver = banjo_driver.BanjoDriver(args.browser, url)
             _run_test_iterations(driver, args.iterations, args.output)
-    if args.client == names.NDT_HTML5:
+    elif args.client == names.NDT_HTML5:
         driver = html5_driver.NdtHtml5SeleniumDriver(args.browser,
                                                      args.client_url,
                                                      timeout=20)
