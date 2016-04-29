@@ -16,6 +16,7 @@ import argparse
 import contextlib
 import os
 
+import banjo_driver
 import fake_mlabns
 import filename
 import html5_driver
@@ -34,7 +35,9 @@ def main(args):
                 args.replay_port, fake_mlabns_server, args.client_path)):
             print 'replay server replaying %s on port %d' % (args.client_path,
                                                              args.replay_port)
-            raise NotImplementedError('Banjo driver is not yet implemented')
+            url = 'http://localhost:%d/' % args.replay_port
+            driver = banjo_driver.BanjoDriver(args.browser, url)
+            _run_test_iterations(driver, args.iterations, args.output)
     if args.client == names.NDT_HTML5:
         driver = html5_driver.NdtHtml5SeleniumDriver(args.browser,
                                                      args.client_url,

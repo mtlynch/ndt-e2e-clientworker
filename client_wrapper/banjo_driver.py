@@ -26,7 +26,18 @@ import browser_client_common
 import names
 import results
 
-ERROR_FAILED_TO_LOCATE_RUN_TEST_BUTTON = 'Failed to locate "Run Speed Test" button.'
+ERROR_FAILED_TO_LOCATE_RUN_TEST_BUTTON = (
+    'Failed to locate "Run Speed Test" button.')
+# TODO(mtlynch): Refactor the following errors into browser_client_common so that
+# banjo_driver and html5_driver use the same error strings.
+ERROR_NO_LATENCY_FIELD = 'Could not find latency field.'
+ERROR_NO_S2C_FIELD = 'Could not find s2c throughput field.'
+ERROR_NO_C2S_FIELD = 'Could not find c2s throughput field.'
+ERROR_FORMAT_ILLEGAL_LATENCY = 'Illegal value shown for latency: %s'
+ERROR_FORMAT_ILLEGAL_S2C_THROUGHPUT = (
+    'Illegal value shown for s2c throughput: %s')
+ERROR_FORMAT_ILLEGAL_C2S_THROUGHPUT = (
+    'Illegal value shown for c2s throughput: %s')
 
 # Default number of seconds to wait for any particular stage of the UI flow to
 # complete.
@@ -87,7 +98,10 @@ class _BanjoUiFlowWrapper(object):
     def complete_ui_flow(self):
         if not self._click_run_test_button():
             return
+        self._record_event_times()
+        self._parse_results_page()
 
+    def _record_event_times(self):
         if self._wait_for_download_test_to_start():
             self._result.s2c_result.start_time = datetime.datetime.now(pytz.utc)
         else:
@@ -110,7 +124,18 @@ class _BanjoUiFlowWrapper(object):
         else:
             self._add_test_error(browser_client_common.ERROR_C2S_NEVER_ENDED)
 
-        # TODO(mtlynch): Implement the rest of the UI flow.
+    def _parse_results_page(self):
+        latency = self._parse_latency()
+        if latency is not None:
+            self._result.latency = latency
+
+        download_throughput = self._parse_download_throughput()
+        if download_throughput is not None:
+            self._result.s2c_result.throughput = download_throughput
+
+        upload_throughput = self._parse_upload_throughput()
+        if upload_throughput is not None:
+            self._result.c2s_result.throughput = upload_throughput
 
     def _click_run_test_button(self):
         start_button = self._driver.find_element_by_id(
@@ -157,6 +182,88 @@ class _BanjoUiFlowWrapper(object):
             self._driver,
             self._driver.find_element_by_id('lrfactory-internetspeed__latency'),
             _DEFAULT_TIMEOUT)
+
+    def _parse_latency(self):
+        """Parses the latency field of the results page.
+
+        Finds the latency field in the results page DOM and parses the value.
+        The human-readable "latency" label is actually on the parent element of
+        the latency field, so we create an XPath to find the parent element by
+        ID, then parse the value from the parent element's second child tag.
+
+        Returns:
+            The parsed latency value (as a float, in milliseconds) if the
+            latency field was found and in valid format, or None if the latency
+            field could not be parsed.
+        """
+        latency_element = self._driver.find_element_by_xpath(
+            '//div[@id="lrfactory-internetspeed__latency"]/*[2]')
+        if not latency_element:
+            self._add_test_error(ERROR_NO_LATENCY_FIELD)
+            return None
+        # The latency is stored as "[value] ms" like "12 ms" so we split the
+        # string and use the numeric portion.
+        latency_text = latency_element.text
+        latency_value_parts = latency_text.split()
+        latency_value = latency_value_parts[0]
+        try:
+            return float(latency_value)
+        except ValueError:
+            self._add_test_error(ERROR_FORMAT_ILLEGAL_LATENCY %
+                                 latency_element.text)
+            return None
+
+    def _parse_download_throughput(self):
+        """Parses the download throughput field of the results page.
+
+        Finds the download throughput field in the results page DOM and parses
+        the value. The human-readable "download" element ID is actually on the
+        parent element of the download throughput field, so we create an XPath
+        to find the parent element by ID, then parse the value from the parent's
+        first child.
+
+        Returns:
+            The parsed download throughput value (as a float, in Mbps) if the
+            download throughput field was found and in valid format, or None if
+            the download throughput field could not be parsed.
+        """
+        throughput = self._driver.find_element_by_xpath(
+            '//div[@id="lrfactory-internetspeed__download"]/*[1]')
+        if not throughput:
+            self._add_test_error(ERROR_NO_S2C_FIELD)
+            return None
+        try:
+            return float(throughput.text)
+        except ValueError:
+            self._add_test_error(ERROR_FORMAT_ILLEGAL_S2C_THROUGHPUT %
+                                 throughput.text)
+            return None
+
+    def _parse_upload_throughput(self):
+        """Parses the upload throughput field of the results page.
+
+        Finds the upload throughput field in the results page DOM and parses the
+        value. The human-readable "upload" element ID is actually on the parent
+        element of the upload throughput field, so we create an XPath to find
+        the parent element by ID, then parse the value from the parent's first
+        child.
+
+        Returns:
+            The parsed upload throughput value (as a float, in Mbps) if the
+            upload throughput field was found and in valid format, or None if
+            the upload throughput field could not be parsed.
+        """
+        throughput = self._driver.find_element_by_xpath(
+            '//div[@id="lrfactory-internetspeed__upload"]/*[1]')
+        if not throughput:
+            self._add_test_error(ERROR_NO_C2S_FIELD)
+            return None
+        try:
+            return float(throughput.text)
+        except ValueError:
+            self._add_test_error(ERROR_FORMAT_ILLEGAL_C2S_THROUGHPUT %
+                                 throughput.text)
+            return None
 
     def _add_test_error(self, error_message):
         self._result.errors.append(results.TestError(error_message))
