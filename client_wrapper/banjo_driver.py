@@ -33,11 +33,11 @@ ERROR_FAILED_TO_LOCATE_RUN_TEST_BUTTON = (
 ERROR_NO_LATENCY_FIELD = 'Could not find latency field.'
 ERROR_NO_S2C_FIELD = 'Could not find s2c throughput field.'
 ERROR_NO_C2S_FIELD = 'Could not find c2s throughput field.'
-ERROR_FORMAT_ILLEGAL_LATENCY = 'Illegal value shown for latency: %s'
+ERROR_FORMAT_ILLEGAL_LATENCY = 'Illegal value shown for latency: [%s]'
 ERROR_FORMAT_ILLEGAL_S2C_THROUGHPUT = (
-    'Illegal value shown for s2c throughput: %s')
+    'Illegal value shown for s2c throughput: [%s]')
 ERROR_FORMAT_ILLEGAL_C2S_THROUGHPUT = (
-    'Illegal value shown for c2s throughput: %s')
+    'Illegal value shown for c2s throughput: [%s]')
 
 # Default number of seconds to wait for any particular stage of the UI flow to
 # complete.
@@ -204,6 +204,10 @@ class _BanjoUiFlowWrapper(object):
         # The latency is stored as "[value] ms" like "12 ms" so we split the
         # string and use the numeric portion.
         latency_text = latency_element.text
+        if not latency_text:
+            self._add_test_error(ERROR_FORMAT_ILLEGAL_LATENCY %
+                                 latency_element.text)
+            return None
         latency_value_parts = latency_text.split()
         latency_value = latency_value_parts[0]
         try:

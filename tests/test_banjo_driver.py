@@ -198,6 +198,46 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         self.assertEqual(times[5], result.c2s_result.end_time)
         self.assertEqual(times[6], result.end_time)
 
+    def test_errors_occur_when_results_page_displays_blank_latency(self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__latency"]/*[2]'] = mock.Mock(
+                text='')
+        result = self.banjo.perform_test()
+
+        self.assertIsNone(result.latency)
+        self.assertEqual(4.56, result.s2c_result.throughput)
+        self.assertEqual(7.89, result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for latency: []'], result.errors)
+
+    def test_errors_occur_when_results_page_displays_blank_download_throughput(
+            self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__download"]/*[1]'] = mock.Mock(
+                text='')
+
+        result = self.banjo.perform_test()
+
+        self.assertEqual(1.23, result.latency)
+        self.assertIsNone(result.s2c_result.throughput)
+        self.assertEqual(7.89, result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for s2c throughput: []'], result.errors)
+
+    def test_errors_occur_when_results_page_displays_blank_upload_throughput(
+            self):
+        self.mock_elements_by_xpath[
+            '//div[@id="lrfactory-internetspeed__upload"]/*[1]'] = mock.Mock(
+                text='')
+
+        result = self.banjo.perform_test()
+
+        self.assertEqual(1.23, result.latency)
+        self.assertEqual(4.56, result.s2c_result.throughput)
+        self.assertIsNone(result.c2s_result.throughput)
+        self.assertErrorMessagesEqual(
+            ['Illegal value shown for c2s throughput: []'], result.errors)
+
     def test_errors_occur_when_results_page_displays_non_numeric_latency(self):
         self.mock_elements_by_xpath[
             '//div[@id="lrfactory-internetspeed__latency"]/*[2]'] = mock.Mock(
@@ -208,7 +248,7 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         self.assertEqual(4.56, result.s2c_result.throughput)
         self.assertEqual(7.89, result.c2s_result.throughput)
         self.assertErrorMessagesEqual(
-            ['Illegal value shown for latency: banana ms'], result.errors)
+            ['Illegal value shown for latency: [banana ms]'], result.errors)
 
     def test_errors_occur_when_results_page_displays_non_numeric_download_throughput(
             self):
@@ -222,7 +262,7 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         self.assertIsNone(result.s2c_result.throughput)
         self.assertEqual(7.89, result.c2s_result.throughput)
         self.assertErrorMessagesEqual(
-            ['Illegal value shown for s2c throughput: banana'], result.errors)
+            ['Illegal value shown for s2c throughput: [banana]'], result.errors)
 
     def test_errors_occur_when_results_page_displays_non_numeric_upload_throughput(
             self):
@@ -236,7 +276,7 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         self.assertEqual(4.56, result.s2c_result.throughput)
         self.assertIsNone(result.c2s_result.throughput)
         self.assertErrorMessagesEqual(
-            ['Illegal value shown for c2s throughput: banana'], result.errors)
+            ['Illegal value shown for c2s throughput: [banana]'], result.errors)
 
     def test_errors_occur_when_results_page_displays_all_non_numeric_metrics(
             self):
@@ -262,9 +302,9 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
         self.assertIsNone(result.s2c_result.throughput)
         self.assertIsNone(result.c2s_result.throughput)
         self.assertErrorMessagesEqual(
-            ['Illegal value shown for latency: apple',
-             'Illegal value shown for s2c throughput: banana',
-             'Illegal value shown for c2s throughput: cherry'], result.errors)
+            ['Illegal value shown for latency: [apple]',
+             'Illegal value shown for s2c throughput: [banana]',
+             'Illegal value shown for c2s throughput: [cherry]'], result.errors)
 
     def test_records_error_when_latency_element_is_not_in_dom(self):
         self.mock_elements_by_xpath[
