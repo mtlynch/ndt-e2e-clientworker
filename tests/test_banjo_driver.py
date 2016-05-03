@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import absolute_import
+import contextlib
 import datetime
 import unittest
 
@@ -36,17 +37,6 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
 
         self.banjo = banjo_driver.BanjoDriver(names.FIREFOX,
                                               'http://fakelocalhost:1234/foo')
-
-    def apply_patches_for_create_browser(self):
-        """Set up patches related to creating the Selenium Browser."""
-        self.mock_driver = mock.Mock()
-        self.mock_driver.capabilities = {'version': 'mock_version'}
-        # Patch the call to create the browser driver to return our mock driver.
-        create_browser_patcher = mock.patch.object(browser_client_common,
-                                                   'create_browser')
-        self.addCleanup(create_browser_patcher.stop)
-        create_browser_patcher.start()
-        browser_client_common.create_browser.return_value = self.mock_driver
 
     def define_mock_behavior_for_find_element_by_id(self):
         """Defines the behavior for driver's find_element_by_id method."""
@@ -180,9 +170,10 @@ class BanjoDriverTest(ndt_client_test.NdtClientTest):
             # Modify the create_browser mock to increment the clock forward one
             # call so we can verify that the browser is created after
             # result.start_time.
+            @contextlib.contextmanager
             def mock_create_browser(unused_browser_name):
                 datetime.datetime.now(pytz.utc)
-                return self.mock_driver
+                yield self.mock_driver
 
             browser_client_common.create_browser.side_effect = (
                 mock_create_browser)

@@ -27,39 +27,60 @@ class CreateBrowserTest(unittest.TestCase):
 
     @mock.patch.object(browser_client_common.webdriver, 'Firefox')
     def test_create_firefox_browser_succeeds(self, mock_firefox):
-        mock_firefox.return_value = 'mock firefox driver'
+        mock_browser_driver = mock.Mock('mock firefox driver')
+        mock_browser_driver.quit = mock.Mock()
+        mock_firefox.return_value = mock_browser_driver
 
-        self.assertEqual('mock firefox driver',
-                         browser_client_common.create_browser(names.FIREFOX))
-        self.assertTrue(mock_firefox.called)
+        with browser_client_common.create_browser(names.FIREFOX) as driver:
+            self.assertTrue(mock_firefox.called)
+            self.assertEqual(mock_browser_driver, driver)
+            self.assertFalse(mock_browser_driver.quit.called)
+
+        self.assertTrue(mock_browser_driver.quit.called)
 
     @mock.patch.object(browser_client_common.webdriver, 'Chrome')
     def test_create_chrome_browser_succeeds(self, mock_chrome):
-        mock_chrome.return_value = 'mock chrome driver'
+        mock_browser_driver = mock.Mock('mock chrome driver')
+        mock_browser_driver.quit = mock.Mock()
+        mock_chrome.return_value = mock_browser_driver
 
-        self.assertEqual('mock chrome driver',
-                         browser_client_common.create_browser(names.CHROME))
-        self.assertTrue(mock_chrome.called)
+        with browser_client_common.create_browser(names.CHROME) as driver:
+            self.assertTrue(mock_chrome.called)
+            self.assertEqual(mock_browser_driver, driver)
+            self.assertFalse(mock_browser_driver.quit.called)
+
+        self.assertTrue(mock_browser_driver.quit.called)
 
     @mock.patch.object(browser_client_common.webdriver, 'Edge')
     def test_create_edge_driver_succeeds(self, mock_edge):
-        mock_edge.return_value = 'mock edge driver'
+        mock_browser_driver = mock.Mock('mock edge driver')
+        mock_browser_driver.quit = mock.Mock()
+        mock_edge.return_value = mock_browser_driver
 
-        self.assertEqual('mock edge driver',
-                         browser_client_common.create_browser(names.EDGE))
-        self.assertTrue(mock_edge.called)
+        with browser_client_common.create_browser(names.EDGE) as driver:
+            self.assertTrue(mock_edge.called)
+            self.assertEqual(mock_browser_driver, driver)
+            self.assertFalse(mock_browser_driver.quit.called)
+
+        self.assertTrue(mock_browser_driver.quit.called)
 
     @mock.patch.object(browser_client_common.webdriver, 'Safari')
     def test_create_safari_browser_succeeds(self, mock_safari):
-        mock_safari.return_value = 'mock safari driver'
+        mock_browser_driver = mock.Mock('mock safari driver')
+        mock_browser_driver.quit = mock.Mock()
+        mock_safari.return_value = mock_browser_driver
 
-        self.assertEqual('mock safari driver',
-                         browser_client_common.create_browser(names.SAFARI))
-        self.assertTrue(mock_safari.called)
+        with browser_client_common.create_browser(names.SAFARI) as driver:
+            self.assertTrue(mock_safari.called)
+            self.assertEqual(mock_browser_driver, driver)
+            self.assertFalse(mock_browser_driver.quit.called)
+
+        self.assertTrue(mock_browser_driver.quit.called)
 
     def test_create_unrecognized_browser_raises_error(self):
         with self.assertRaises(ValueError):
-            browser_client_common.create_browser('not a real browser name')
+            with browser_client_common.create_browser('foo'):
+                pass
 
 
 class LoadUrlTest(ndt_client_test.NdtClientTest):

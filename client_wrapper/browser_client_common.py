@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextlib
+
 from selenium import webdriver
 from selenium.common import exceptions
 from selenium.webdriver.support import expected_conditions
@@ -30,25 +32,34 @@ ERROR_C2S_NEVER_ENDED = 'Timed out waiting for c2s test to end.'
 ERROR_S2C_NEVER_ENDED = 'Timed out waiting for s2c test to end.'
 
 
+@contextlib.contextmanager
 def create_browser(browser):
-    """Creates a Selenium-controlled web browser.
+    """Creates a context manager for a Selenium-controlled web browser.
+
+    Creates a context manager to produce a Selenium-driven web browser. The
+    Caller should call this function from within a with block so that the
+    Selenium resources are freed properly when the browser is no longer needed.
 
     Args:
         browser: Can be one of 'firefox', 'chrome', 'edge', or 'safari'
 
-    Returns:
+    Yields:
         An instance of a Selenium webdriver browser class corresponding to
         the specified browser.
     """
     if browser == names.FIREFOX:
-        return webdriver.Firefox()
+        driver = webdriver.Firefox()
     elif browser == names.CHROME:
-        return webdriver.Chrome()
+        driver = webdriver.Chrome()
     elif browser == names.EDGE:
-        return webdriver.Edge()
+        driver = webdriver.Edge()
     elif browser == names.SAFARI:
-        return webdriver.Safari()
-    raise ValueError('Invalid browser specified: %s' % browser)
+        driver = webdriver.Safari()
+    else:
+        raise ValueError('Invalid browser specified: %s' % browser)
+
+    yield driver
+    driver.quit()
 
 
 def load_url(driver, url, errors):

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from __future__ import division
-import contextlib
 import datetime
 
 import pytz
@@ -65,8 +64,7 @@ class BanjoDriver(object):
         result = results.NdtResult(client=names.BANJO,
                                    start_time=datetime.datetime.now(pytz.utc))
 
-        with contextlib.closing(browser_client_common.create_browser(
-                self._browser)) as driver:
+        with browser_client_common.create_browser(self._browser) as driver:
             result.browser = self._browser
             result.browser_version = driver.capabilities['version']
 
