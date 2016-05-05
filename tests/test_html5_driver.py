@@ -21,10 +21,10 @@ import pytz
 
 from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
-from tests import ndt_client_test
+from tests import ndt_client_testcase
 
 
-class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
+class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
     def setUp(self):
         self.apply_patches_for_create_browser()

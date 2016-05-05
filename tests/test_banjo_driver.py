@@ -23,10 +23,10 @@ from selenium.common import exceptions
 from client_wrapper import banjo_driver
 from client_wrapper import browser_client_common
 from client_wrapper import names
-from tests import ndt_client_test
+from tests import ndt_client_testcase
 
 
-class BanjoDriverTest(ndt_client_test.NdtClientTest):
+class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
 
     def setUp(self):
         self.apply_patches_for_create_browser()

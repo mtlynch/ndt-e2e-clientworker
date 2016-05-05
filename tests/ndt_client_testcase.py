@@ -19,7 +19,7 @@ import mock
 from client_wrapper import browser_client_common
 
 
-class NdtClientTest(unittest.TestCase):
+class NdtClientTestCase(unittest.TestCase):
     """Base class for unit tests of NDT clients.
 
     Defines common functions needed in unit tests of NDT clients.
