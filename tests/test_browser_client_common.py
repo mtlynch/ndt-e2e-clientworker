@@ -19,7 +19,7 @@ from selenium.common import exceptions
 
 from client_wrapper import browser_client_common
 from client_wrapper import names
-from tests import ndt_client_test
+from tests import ndt_client_testcase
 
 
 class CreateBrowserTest(unittest.TestCase):
@@ -83,7 +83,7 @@ class CreateBrowserTest(unittest.TestCase):
                 pass
 
 
-class LoadUrlTest(ndt_client_test.NdtClientTest):
+class LoadUrlTest(ndt_client_testcase.NdtClientTestCase):
     """Tests for load_url function."""
 
     def test_load_url_loads_correct_url(self):
