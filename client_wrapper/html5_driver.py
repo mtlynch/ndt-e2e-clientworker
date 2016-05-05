@@ -58,7 +58,8 @@ class NdtHtml5SeleniumDriver(object):
 
         with browser_client_common.create_browser(self._browser) as driver:
             result.browser = self._browser
-            result.browser_version = driver.capabilities['version']
+            result.browser_version = browser_client_common.get_browser_version(
+                driver)
 
             _complete_ui_flow(driver, self._url, self._timeout, result)
 

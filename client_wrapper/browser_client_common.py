@@ -32,6 +32,15 @@ ERROR_C2S_NEVER_ENDED = 'Timed out waiting for c2s test to end.'
 ERROR_S2C_NEVER_ENDED = 'Timed out waiting for s2c test to end.'
 
 
+class Error(Exception):
+    pass
+
+
+class BrowserVersionMissing(Error):
+    """Error raised when a browser version does not apper in Selenium driver."""
+    pass
+
+
 @contextlib.contextmanager
 def create_browser(browser):
     """Creates a context manager for a Selenium-controlled web browser.
@@ -60,6 +69,30 @@ def create_browser(browser):
 
     yield driver
     driver.quit()
+
+
+def get_browser_version(driver):
+    """Determine the browser version for a Selenium WebDriver instance.
+
+    Args:
+        driver: A Selenium WebDriver instance.
+
+    Returns:
+        A version string for the browser, e.g. "45.0.3".
+
+    Raises:
+        BrowserVersionMissing: Browser version could not be determined.
+    """
+    # Most drivers put the version information in the 'version' field.
+    if 'version' in driver.capabilities:
+        return driver.capabilities['version']
+    # Drivers like Edge's WebDriver lack a 'version' field and instead have a
+    # 'browserVersion' field.
+    elif 'browserVersion' in driver.capabilities:
+        return driver.capabilities['browserVersion']
+    else:
+        raise BrowserVersionMissing(
+            'Could not identify browser version from driver.')
 
 
 def load_url(driver, url, errors):

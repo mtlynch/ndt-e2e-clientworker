@@ -83,6 +83,34 @@ class CreateBrowserTest(unittest.TestCase):
                 pass
 
 
+class GetBrowserVersionTest(unittest.TestCase):
+
+    def test_get_version_returns_successfully_when_driver_has_standard_version(
+            self):
+        mock_driver = mock.Mock()
+        mock_driver.capabilities = {'version': '1.2.3'}
+
+        self.assertEqual('1.2.3',
+                         browser_client_common.get_browser_version(mock_driver))
+
+    def test_get_version_returns_successfully_when_driver_has_edge_style_version(
+            self):
+        """Microsoft Edge's WebDriver puts version in 'browserVersion' field."""
+        mock_driver = mock.Mock()
+        mock_driver.capabilities = {'browserVersion': '1.2.3'}
+
+        self.assertEqual('1.2.3',
+                         browser_client_common.get_browser_version(mock_driver))
+
+    def test_get_version_raises_BrowserVersionMissing_when_driver_has_no_version(
+            self):
+        mock_driver = mock.Mock()
+        mock_driver.capabilities = {}
+
+        with self.assertRaises(browser_client_common.BrowserVersionMissing):
+            browser_client_common.get_browser_version(mock_driver)
+
+
 class LoadUrlTest(ndt_client_testcase.NdtClientTestCase):
     """Tests for load_url function."""
 
