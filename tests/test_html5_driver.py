@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import absolute_import
+import contextlib
 import datetime
 import unittest
 
@@ -20,15 +21,13 @@ import pytz
 
 from client_wrapper import browser_client_common
 from client_wrapper import html5_driver
-from tests import ndt_client_test
+from tests import ndt_client_testcase
 
 
-class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
+class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
     def setUp(self):
-        self.mock_driver = mock.Mock()
-        self.mock_driver.capabilities = {'version': 'mock_version'}
-
+        self.apply_patches_for_create_browser()
         wait_until_visible_patcher = mock.patch.object(
             html5_driver.browser_client_common, 'wait_until_element_is_visible')
         self.addCleanup(wait_until_visible_patcher.stop)
@@ -63,13 +62,6 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
         create_browser_patcher.start()
         browser_client_common.find_element_containing_text.side_effect = (
             lambda _, text: self.mock_elements_by_text[text])
-
-        # Patch the call to create the browser driver to return our mock driver.
-        create_browser_patcher = mock.patch.object(browser_client_common,
-                                                   'create_browser')
-        self.addCleanup(create_browser_patcher.stop)
-        create_browser_patcher.start()
-        browser_client_common.create_browser.return_value = self.mock_driver
 
     def test_test_yields_valid_results_when_all_page_elements_are_expected_values(
             self):
@@ -289,9 +281,10 @@ class NdtHtml5SeleniumDriverTest(ndt_client_test.NdtClientTest):
 
             # Modify the create_browser mock to increment the clock forward one
             # call.
+            @contextlib.contextmanager
             def mock_create_browser(unused_browser_name):
                 datetime.datetime.now(pytz.utc)
-                return self.mock_driver
+                yield self.mock_driver
 
             browser_client_common.create_browser.side_effect = (
                 mock_create_browser)
