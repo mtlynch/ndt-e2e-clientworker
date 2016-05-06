@@ -66,7 +66,8 @@ class BanjoDriver(object):
 
         with browser_client_common.create_browser(self._browser) as driver:
             result.browser = self._browser
-            result.browser_version = driver.capabilities['version']
+            result.browser_version = browser_client_common.get_browser_version(
+                driver)
 
             if not browser_client_common.load_url(driver, self._url,
                                                   result.errors):
