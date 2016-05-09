@@ -45,7 +45,7 @@ class HttpWaitTimeoutError(Error):
     def __init__(self, port):
         super(HttpWaitTimeoutError, self).__init__(
             'Wait timeout exceeded when waiting for a response on local port ' +
-            port)
+            str(port))
 
 
 class ReplayHTTPServer(object):
@@ -100,6 +100,7 @@ class ReplayHTTPServer(object):
         """
         self._mlabns_thread = threading.Thread(
             target=self._mlabns_server.serve_forever)
+        self._mlabns_thread.daemon = True
         self._mlabns_thread.start()
         self._wait_for_local_http_response(self._mlabns_server.port)
 
