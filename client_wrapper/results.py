@@ -58,9 +58,12 @@ class TestError(object):
         timestamp: Datetime of when the error was observed.
     """
 
-    def __init__(self, message, timestamp=datetime.datetime.now(pytz.utc)):
+    def __init__(self, message, timestamp=None):
         self._message = message
-        self._timestamp = timestamp
+        if timestamp:
+            self._timestamp = timestamp
+        else:
+            self._timestamp = datetime.datetime.now(pytz.utc)
 
     def __eq__(self, other):
         return all(((self.message == other.message),
