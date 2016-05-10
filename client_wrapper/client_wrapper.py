@@ -35,7 +35,7 @@ def main(args):
                 args.replay_port, fake_mlabns_server, args.client_path)):
             print 'replay server replaying %s on port %d' % (args.client_path,
                                                              args.replay_port)
-            url = 'http://localhost:%d/' % args.replay_port
+            url = 'http://localhost:%d/banjo' % args.replay_port
             driver = banjo_driver.BanjoDriver(args.browser, url)
             _run_test_iterations(driver, args.iterations, args.output)
     elif args.client == names.NDT_HTML5:
