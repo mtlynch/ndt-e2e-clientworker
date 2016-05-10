@@ -69,11 +69,9 @@ class BanjoDriver(object):
             result.browser_version = browser_client_common.get_browser_version(
                 driver)
 
-            if not browser_client_common.load_url(driver, self._url,
-                                                  result.errors):
-                return
-
-            _BanjoUiFlowWrapper(driver, self._url, result).complete_ui_flow()
+            if browser_client_common.load_url(driver, self._url, result.errors):
+                _BanjoUiFlowWrapper(driver, self._url,
+                                    result).complete_ui_flow()
 
         result.end_time = datetime.datetime.now(pytz.utc)
         return result
