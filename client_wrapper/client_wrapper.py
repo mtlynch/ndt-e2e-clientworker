@@ -109,6 +109,7 @@ if __name__ == '__main__':
     parser.add_argument('--server', help='FQDN of NDT server to test against')
     parser.add_argument('--replay_port',
                         help='Port to listen on for replay server',
+                        type=int,
                         default=8888)
     parser.add_argument('--output', help='Directory in which to write output')
     parser.add_argument('--iterations',
