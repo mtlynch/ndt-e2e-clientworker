@@ -23,6 +23,7 @@ from selenium.common import exceptions
 from client_wrapper import banjo_driver
 from client_wrapper import browser_client_common
 from client_wrapper import names
+from client_wrapper import results
 from tests import ndt_client_testcase
 
 
@@ -114,6 +115,29 @@ class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
         self.assertEqual(4.56, result.s2c_result.throughput)
         self.assertEqual(7.89, result.c2s_result.throughput)
         self.assertErrorMessagesEqual([], result.errors)
+
+    def test_test_records_error_when_url_does_not_load(self):
+        """If the URL fails to load, return a valid NdtResult with an error."""
+
+        # Create a mock implementation of load_url that always fails and appends
+        # an error to the error list.
+        def mock_load_url(unused_driver, unused_url, errors):
+            errors.append(results.TestError('mock url load error'))
+            return False
+
+        with mock.patch.object(banjo_driver.browser_client_common,
+                               'load_url') as load_url_patch:
+            load_url_patch.side_effect = mock_load_url
+
+            result = self.banjo.perform_test()
+
+            self.assertErrorMessagesEqual(
+                ['mock url load error'], result.errors)
+
+            # No other result fields should be populated.
+            self.assertIsNone(result.latency)
+            self.assertIsNone(result.s2c_result.throughput)
+            self.assertIsNone(result.c2s_result.throughput)
 
     def test_test_records_error_when_run_test_button_is_not_in_dom(self):
         self.mock_elements_by_id['lrfactory-internetspeed__test_button'] = None
