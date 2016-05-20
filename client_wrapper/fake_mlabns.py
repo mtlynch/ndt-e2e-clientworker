@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import json
+import logging
 import BaseHTTPServer
+
+logger = logging.getLogger(__name__)
 
 
 class FakeMLabNsServer(BaseHTTPServer.HTTPServer):
@@ -73,6 +76,5 @@ class _FakeMLabNsHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         }
         self.wfile.write(json.dumps(response))
 
-    def log_message(self, unused_format, *args):
-        """Silence console output."""
-        pass
+    def log_message(self, format, *args):
+        logger.info(format, *args)

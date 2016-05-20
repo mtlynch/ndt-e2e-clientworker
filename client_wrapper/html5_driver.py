@@ -14,12 +14,15 @@
 
 from __future__ import division
 import datetime
+import logging
 
 import pytz
 
 import browser_client_common
 import names
 import results
+
+logger = logging.getLogger(__name__)
 
 # TODO(mtlynch): Define all error strings as public constants so we're not
 # duplicating strings between production code and unit test code.
@@ -56,6 +59,7 @@ class NdtHtml5SeleniumDriver(object):
         result.client = names.NDT_HTML5
         result.start_time = datetime.datetime.now(pytz.utc)
 
+        logger.info('starting NDT HTML5 test')
         with browser_client_common.create_browser(self._browser) as driver:
             result.browser = self._browser
             result.browser_version = browser_client_common.get_browser_version(
@@ -64,6 +68,7 @@ class NdtHtml5SeleniumDriver(object):
             _complete_ui_flow(driver, self._url, self._timeout, result)
 
         result.end_time = datetime.datetime.now(pytz.utc)
+        logger.info('NDT HTML5 test ended')
         return result
 
 
@@ -78,34 +83,44 @@ def _complete_ui_flow(driver, url, timeout, result):
         result: NdtResult instance to populate with results from proceeding
             through the UI flow.
     """
+    logger.info('loading URL: %s', url)
     if not browser_client_common.load_url(driver, url, result.errors):
         return
+    logger.info('page loaded, starting UI flow')
 
     _click_websocket_button(driver)
     # If we can't click the start button, nothing left to do, so bail out.
     if not _click_start_button(driver, timeout, result.errors):
         return
+    logger.info('clicked "Start Test" button')
     result.c2s_result = results.NdtSingleTestResult()
     result.s2c_result = results.NdtSingleTestResult()
 
     if _wait_for_c2s_test_to_start(driver, timeout):
         result.c2s_result.start_time = datetime.datetime.now(pytz.utc)
+        logger.info('c2s test started')
     else:
         result.errors.append(results.TestError(
             browser_client_common.ERROR_C2S_NEVER_STARTED))
+        logger.error(browser_client_common.ERROR_C2S_NEVER_STARTED)
 
     if _wait_for_s2c_test_to_start(driver, timeout):
         result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
+        logger.info('c2s test finished')
         result.s2c_result.start_time = datetime.datetime.now(pytz.utc)
+        logger.info('s2c test started')
     else:
         result.errors.append(results.TestError(
             browser_client_common.ERROR_S2C_NEVER_STARTED))
+        logger.error(browser_client_common.ERROR_S2C_NEVER_STARTED)
 
     if _wait_for_results_page_to_appear(driver, timeout):
         result.s2c_result.end_time = datetime.datetime.now(pytz.utc)
+        logger.info('s2c test finished')
     else:
         result.errors.append(results.TestError(
             browser_client_common.ERROR_S2C_NEVER_ENDED))
+        logger.error(browser_client_common.ERROR_S2C_NEVER_ENDED)
 
     _populate_metric_values(result, driver)
 
@@ -132,11 +147,13 @@ def _click_start_button(driver, timeout, errors):
         driver, 'Start Test')
     if not start_button:
         errors.append(results.TestError(ERROR_START_BUTTON_NOT_IN_DOM))
+        logger.error(ERROR_START_BUTTON_NOT_IN_DOM)
         return False
     if not browser_client_common.wait_until_element_is_visible(
             driver, start_button, timeout):
         errors.append(results.TestError(
             ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON))
+        logger.error(ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON)
         return False
     start_button.click()
     return True

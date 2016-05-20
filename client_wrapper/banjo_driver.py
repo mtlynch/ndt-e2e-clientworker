@@ -14,6 +14,7 @@
 
 from __future__ import division
 import datetime
+import logging
 
 import pytz
 from selenium.webdriver.support import ui
@@ -24,6 +25,8 @@ from selenium.webdriver.common import by
 import browser_client_common
 import names
 import results
+
+logger = logging.getLogger(__name__)
 
 ERROR_FAILED_TO_LOCATE_RUN_TEST_BUTTON = (
     'Failed to locate "Run Speed Test" button.')
@@ -64,16 +67,20 @@ class BanjoDriver(object):
         result = results.NdtResult(client=names.BANJO,
                                    start_time=datetime.datetime.now(pytz.utc))
 
+        logger.info('starting banjo test')
         with browser_client_common.create_browser(self._browser) as driver:
             result.browser = self._browser
             result.browser_version = browser_client_common.get_browser_version(
                 driver)
 
+            logger.info('loading URL: %s', self._url)
             if browser_client_common.load_url(driver, self._url, result.errors):
+                logger.info('page loaded, starting UI flow')
                 _BanjoUiFlowWrapper(driver, self._url,
                                     result).complete_ui_flow()
 
         result.end_time = datetime.datetime.now(pytz.utc)
+        logger.info('banjo test ended')
         return result
 
 
@@ -95,22 +102,26 @@ class _BanjoUiFlowWrapper(object):
     def complete_ui_flow(self):
         if not self._click_run_test_button():
             return
+        logger.info('clicked "Run Test" button')
         self._record_event_times()
         self._parse_results_page()
 
     def _record_event_times(self):
         if self._wait_for_download_test_to_start():
             self._result.s2c_result.start_time = datetime.datetime.now(pytz.utc)
+            logger.info('s2c test started')
         else:
             self._add_test_error(browser_client_common.ERROR_S2C_NEVER_STARTED)
 
         if self._wait_for_download_test_to_end():
             self._result.s2c_result.end_time = datetime.datetime.now(pytz.utc)
+            logger.info('s2c test finished')
         else:
             self._add_test_error(browser_client_common.ERROR_S2C_NEVER_ENDED)
 
         if self._wait_for_upload_test_to_start():
             self._result.c2s_result.start_time = datetime.datetime.now(pytz.utc)
+            logger.info('c2s test started')
         else:
             self._add_test_error(browser_client_common.ERROR_C2S_NEVER_STARTED)
 
@@ -118,6 +129,7 @@ class _BanjoUiFlowWrapper(object):
         # complete.
         if self._wait_for_latency_field():
             self._result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
+            logger.info('c2s test ended')
         else:
             self._add_test_error(browser_client_common.ERROR_C2S_NEVER_ENDED)
 
@@ -268,3 +280,4 @@ class _BanjoUiFlowWrapper(object):
 
     def _add_test_error(self, error_message):
         self._result.errors.append(results.TestError(error_message))
+        logger.error(error_message)
