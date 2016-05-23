@@ -14,6 +14,7 @@
 
 import argparse
 import contextlib
+import logging
 import os
 
 import banjo_driver
@@ -25,16 +26,19 @@ import names
 import result_encoder
 import os_metadata
 
+logger = logging.getLogger(__name__)
+
 
 def main(args):
+    _configure_logging(args.verbose)
     if args.client == names.BANJO:
         fake_mlabns_server = fake_mlabns.FakeMLabNsServer(args.server)
-        print 'starting fake mlab-ns server on port %d' % (
-            fake_mlabns_server.port)
+        logger.info('starting fake mlab-ns server on port %d',
+                    fake_mlabns_server.port)
         with contextlib.closing(http_server.ReplayHTTPServer(
                 args.replay_port, fake_mlabns_server, args.client_path)):
-            print 'replay server replaying %s on port %d' % (args.client_path,
-                                                             args.replay_port)
+            logger.info('replay server replaying %s on port %d',
+                        args.client_path, args.replay_port)
             url = 'http://localhost:%d/banjo' % args.replay_port
             driver = banjo_driver.BanjoDriver(args.browser, url)
             _run_test_iterations(driver, args.iterations, args.output)
@@ -45,6 +49,20 @@ def main(args):
         _run_test_iterations(driver, args.iterations, args.output)
     else:
         raise ValueError('unsupported NDT client: %s' % args.client)
+
+
+def _configure_logging(verbose):
+    """Configure the root logger for log output."""
+    root_logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    root_logger.addHandler(handler)
+    if verbose:
+        root_logger.setLevel(logging.INFO)
+    else:
+        root_logger.setLevel(logging.WARNING)
 
 
 def _run_test_iterations(driver, iterations, output_dir):
@@ -60,6 +78,7 @@ def _run_test_iterations(driver, iterations, output_dir):
         output_dir: Directory in which to result file.
     """
     for i in range(iterations):
+        logger.info('starting iteration %d...', (i + 1))
         print 'starting iteration %d...' % (i + 1)
         result = driver.perform_test()
         result.os, result.os_version = os_metadata.get_os_metadata()
@@ -112,6 +131,10 @@ if __name__ == '__main__':
                         type=int,
                         default=8888)
     parser.add_argument('--output', help='Directory in which to write output')
+    parser.add_argument('-v',
+                        '--verbose',
+                        action='store_true',
+                        help='Use verbose logging')
     parser.add_argument('--iterations',
                         help='Number of iterations to run',
                         type=int,
