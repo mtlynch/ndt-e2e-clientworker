@@ -19,7 +19,7 @@ class Error(Exception):
     pass
 
 
-class MissingFieldError(Exception):
+class MissingFieldError(Error):
     """Error raised when YAML-serialized HttpResponse is missing fields."""
 
     def __init__(self, field):
