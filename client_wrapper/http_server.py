@@ -17,26 +17,23 @@ Defines various HTTP server classes meant for hosting web-based NDT client
 implementations.
 """
 
+import BaseHTTPServer
 import datetime
-import re
-import subprocess
+import json
+import logging
+import SimpleHTTPServer
 import threading
 import urllib
 
 import pytz
 
+import http_replay
+
+logger = logging.getLogger(__name__)
+
 
 class Error(Exception):
     pass
-
-
-class MitmProxyNotInstalledError(Error):
-    """Error raised when mitmproxy seems to not be installed."""
-
-    def __init__(self):
-        super(MitmProxyNotInstalledError, self).__init__(
-            'Failed to execute mitmdump utility. Is mitmproxy installed? '
-            'http://docs.mitmproxy.org/en/stable/install.html')
 
 
 class HttpWaitTimeoutError(Error):
@@ -48,129 +45,174 @@ class HttpWaitTimeoutError(Error):
             str(port))
 
 
-class ReplayHTTPServer(object):
-    """HTTP server that replays saved HTTP traffic to facilitate an NDT test.
+def create_replay_server_manager(replays, ndt_server_fqdn):
+    """Creates a replay server wrapped in a server manager."""
+    return HttpServerManager(ReplayHTTPServer(replays, ndt_server_fqdn))
 
-    This replays HTTP traffic from a mitmdump file in order to replicate a
-    remote web application that hosts a web-based NDT client.
 
-    This is a more complex NDT HTTP server host that is meant to host NDT
-    clients that cannot be represented easily with static HTML files. In
-    general, most NDT clients can be hosted with StaticHTTPServer (not yet
-    implemented) and should prefer that class to ReplayHTTPServer.
+class ReplayHTTPServer(BaseHTTPServer.HTTPServer):
+    """HTTP server that replays saved HTTP responses.
 
-    Caller is responsible for cleaning up the replay server's resources by
-    calling close() on the instance.
+    Attributes:
+        port: Port on which the server is listening for connections.
+        replays: A dictionary of HttpResponse instances, keyed by relative URL.
     """
 
-    def __init__(self, listen_port, mlabns_server, replay_filename):
-        """Create a new ReplayHTTPServer instance and listen for connections.
+    def __init__(self, replays, ndt_server_fqdn):
+        """Creates a new ReplayHTTPServer.
 
         Args:
-            listen_port: The local port on which to listen on to replay traffic.
-                This will allow HTTP clients to connect to this port as if were
-                a normal web server.
-            mlabns_server: An instance of FakeMLabNsServer to use as the fake
-                mlab-ns server for traffic replays.
-            replay_filename: Path to filename that contains a mitmdump/mitmproxy
-                traffic capture file. The replay server will use this file to
-                replay HTTP traffic.
+            replays: A dictionary of HttpResponse instances, keyed by relative
+                URL.
+            ndt_server_fqdn: FQDN of target NDT server.
         """
-        self._listen_port = listen_port
-        self._mlabns_server = mlabns_server
-        self._replay_filename = replay_filename
-        self._mlabns_thread = None
-        self._server_proc = None
-        self._start()
+        BaseHTTPServer.HTTPServer.__init__(self, ('', 0), _ReplayRequestHandler)
+        self._port = self.server_address[1]
+        self._replays = replays
+        self._rewrite_mlabns_replays(ndt_server_fqdn)
+        self._rewrite_localhost_ips()
 
-    def _start(self):
-        """Start the replay HTTP traffic server asynchronously.
+    @property
+    def port(self):
+        return self._port
 
-        Starts the replay HTTP server in a separate process and the fake mlab-ns
-        server in a separate thread.
+    @property
+    def replays(self):
+        return self._replays
+
+    def _rewrite_mlabns_replays(self, ndt_server_fqdn):
+        """Rewrites mlab-ns responses to point to a custom NDT server.
+
+        Finds all mlab-ns responses in the replays and replaces the responses
+        with a synthetic mlab-ns response that points to an NDT server with the
+        given FQDN.
+
+        Args:
+            ndt_server_fqdn: Target NDT server to use in rewritten mlab-ns
+                responses.
         """
-        self._start_fake_mlabns()
-        self._start_mitmdump()
+        mlabns_response_data = json.dumps(
+            {'city': 'Test_TT',
+             'url': 'http://%s:7123' % ndt_server_fqdn,
+             'ip': ['1.2.3.4'],
+             'fqdn': ndt_server_fqdn,
+             'site': 'xyz99',
+             'country': 'US'})
+        paths = ['/ndt', '/ndt_ssl']
+        for path in paths:
+            if path in self._replays:
+                original_response = self._replays[path]
+                self._replays[path] = http_replay.HttpReplay(
+                    original_response.response_code, original_response.headers,
+                    mlabns_response_data)
 
-    def _start_fake_mlabns(self):
-        """Start the fake mlab-ns server in a background thread.
+    def _rewrite_localhost_ips(self):
+        for path, original_response in self._replays.iteritems():
+            # Replace all instances of 127.0.0.1 with localhost and the port that
+            # our parent server is listening on.
+            rewritten_data = original_response.data.replace(
+                '127.0.0.1', 'localhost:%d' % self._port)
+            # Update the Content-Length header since we have changed the
+            # content.
+            headers = original_response.headers
+            headers['content-length'] = len(rewritten_data)
+            self._replays[path] = http_replay.HttpReplay(
+                original_response.response_code, headers, rewritten_data)
 
-        Start the fake mlab-ns server in a background thread, but block until
-        the server begins serving responses.
+
+class _ReplayRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    """Request handler for replaying saved HTTP responses."""
+
+    def __init__(self, request, client_address, server):
+        self._replays = server.replays
+        self._server_port = server.port
+        SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(
+            self, request, client_address, server)
+
+    def do_GET(self):
+        """Handle an HTTP GET request.
+
+        Serve an HTTP GET request by replaying a stored response. If there is
+        no matching response, serve a 404 and log a message.
         """
-        self._mlabns_thread = threading.Thread(
-            target=self._mlabns_server.serve_forever)
-        self._mlabns_thread.daemon = True
-        self._mlabns_thread.start()
-        self._wait_for_local_http_response(self._mlabns_server.port)
-
-    def _start_mitmdump(self):
-        """Starts a mitmdump process as a reverse proxy to replay traffic.
-
-        Starts mitmdump process and wait for it to begin serving responses.
-
-        Note that it is in theory possible to launch mitmdump in pure Python
-        using the mitmproxy package. We choose not to because those APIs are
-        not documented, whereas the command line parameters are. We therefore
-        run mitmdump in a separate process even though it's a bit uglier to do
-        so.
-        """
-        cmd_params = ['mitmdump']
-        # Suppress warning about lack of HTTP/2 support. We don't need HTTP/2.
-        cmd_params.append('--no-http2')
-        # Allow server to re-use responses for particular requests (default is
-        # to pop responses from the replay queue after the first matching
-        # request).
-        cmd_params.append('--no-pop')
-        # Set up local port to listen for connections.
-        cmd_params.append('--port=%d' % self._listen_port)
-        # Run in reverse proxy mode, but the original hostname no longer
-        # matters, so we set it to a garbage value and signal to ignore the
-        # hostname.
-        cmd_params.append('--reverse=http://ignored.ignored')
-        cmd_params.append('--replay-ignore-host')
-        # Specify the mitmdump file to replay.
-        cmd_params.append('--server-replay=%s' % self._replay_filename)
-        # Replace references to production mlab-ns in HTTP traffic with a
-        # our own fake mlab-ns server.
-        mlabns_original = re.escape('mlab-ns.appspot.com')
-        mlabns_replaced = re.escape('localhost:%d' % self._mlabns_server.port)
-        cmd_params.append('--replace=/~s/%s/%s' % (mlabns_original,
-                                                   mlabns_replaced))
-
-        # Launch mitmdump in a subprocess.
         try:
-            self._server_proc = subprocess.Popen(cmd_params,
-                                                 stdout=subprocess.PIPE)
-        except OSError:
-            raise MitmProxyNotInstalledError()
+            response = self._replays[self.path]
+        except KeyError:
+            logger.info('No stored result for %s', self.path)
+            self.send_error(404, 'File not found')
+            return
 
-        self._wait_for_local_http_response(self._listen_port)
+        self.send_response(response.response_code)
+        for header, value in response.headers.iteritems():
+            self.send_header(header, value)
+        self.end_headers()
+        self.wfile.write(response.data)
 
-    def _wait_for_local_http_response(self, port):
-        """Wait for a local port to begin responding to HTTP requests."""
-        # Maximum number of seconds to wait for a port to begin responding to
-        # HTTP requests.
-        max_wait_seconds = 5
-        start_time = datetime.datetime.now(tz=pytz.utc)
-        while (datetime.datetime.now(tz=pytz.utc) -
-               start_time).total_seconds() < max_wait_seconds:
-            try:
-                urllib.urlopen('http://localhost:%d/' % port)
-                return
-            except IOError:
-                pass
-        raise HttpWaitTimeoutError(port)
+    def log_message(self, format, *args):
+        # Don't log messages because it creates too much logging noise.
+        pass
+
+
+class HttpServerManager(object):
+    """A wrapper for HTTP server instances to support asynchronous running.
+
+    Wraps HTTP server instances so that callers can easily start the server
+    asynchronously with assurance that the server has begun serving.
+
+    Attributes:
+        port: The local TCP port on which the child server is listening for
+            connections.
+    """
+
+    def __init__(self, http_server):
+        """Creates a new HttpServerManager.
+
+        Args:
+            http_server: An HTTP server instance that has a "port" attribute and
+                a "serve_forever" function.
+        """
+        self._http_server = http_server
+        self._http_server_thread = None
+
+    @property
+    def port(self):
+        return self._http_server.port
+
+    def start(self):
+        """Starts the child HTTP server.
+
+        Starts the child HTTP server and blocks until the server begins serving
+        HTTP requests. After calling start(), the owner of the instance is
+        responsible for calling close() to release the child server's resources.
+        """
+        self._start_http_server_async()
+        _wait_for_local_http_response(self._http_server.port)
+
+    def _start_http_server_async(self):
+        """Starts the child HTTP server in a background thread."""
+        self._server_thread = threading.Thread(
+            target=self._http_server.serve_forever)
+        self._server_thread.daemon = True
+        self._server_thread.start()
 
     def close(self):
-        """Close the replay server by terminating all background workers.
+        """Shut down the child HTTP server."""
+        if self._http_server_thread:
+            self._http_server.shutdown()
+            self._http_server_thread.join()
 
-        Terminates all background processes and threads to shut down the replay
-        server. Caller is responsible for calling this method when it is
-        finished with a ReplayHTTPServer instance.
-        """
-        if self._server_proc:
-            self._server_proc.kill()
-        if self._mlabns_thread:
-            self._mlabns_server.shutdown()
-            self._mlabns_thread.join()
+
+def _wait_for_local_http_response(port):
+    """Wait for a local port to begin responding to HTTP requests."""
+    # Maximum number of seconds to wait for a port to begin responding to
+    # HTTP requests.
+    max_wait_seconds = 5
+    start_time = datetime.datetime.now(tz=pytz.utc)
+    while (datetime.datetime.now(tz=pytz.utc) -
+           start_time).total_seconds() < max_wait_seconds:
+        try:
+            urllib.urlopen('http://localhost:%d/' % port)
+            return
+        except IOError:
+            pass
+    raise HttpWaitTimeoutError(port)

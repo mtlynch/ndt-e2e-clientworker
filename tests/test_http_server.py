@@ -11,117 +11,86 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import absolute_import
-import contextlib
-import re
+import json
 import unittest
+import urllib2
 
-import mock
-
-from client_wrapper import fake_mlabns
+from client_wrapper import http_response
 from client_wrapper import http_server
-
-MOCK_LISTEN_PORT = 8123
-MOCK_MLABNS_PORT = 8321
-MOCK_REPLAY_FILENAME = 'mock-file.replay'
 
 
 class ReplayHTTPServerTest(unittest.TestCase):
 
-    def setUp(self):
-        # Mock out calls to subprocess.Popen.
-        subprocess_popen_patch = mock.patch.object(http_server.subprocess,
-                                                   'Popen',
-                                                   autospec=True)
-        self.addCleanup(subprocess_popen_patch.stop)
-        subprocess_popen_patch.start()
+    def test_server_replays_response_accurately(self):
+        response_data = 'mock foo response'
+        stored_response = http_response.HttpResponse(200, {'Mock-Header': 'OK'},
+                                                     response_data)
+        server_manager = http_server.create_replay_server_manager(
+            {'/foo': stored_response}, 'ndt.mock-lab.org')
+        server_manager.start()
 
-        # Mock out calls to urllib.urlopen.
-        urllib_urlopen_patch = mock.patch.object(http_server.urllib,
-                                                 'urlopen',
-                                                 autospec=True)
-        self.addCleanup(urllib_urlopen_patch.stop)
-        urllib_urlopen_patch.start()
+        response = urllib2.urlopen('http://localhost:%d/foo' %
+                                   server_manager.port)
+        self.assertEqual(200, response.getcode())
+        self.assertDictEqual(
+            {'mock-header': 'OK',
+             'content-length': str(len(response_data))},
+            parse_headers(response.info().items()))
+        self.assertEqual(response_data, response.read())
 
-        # Create a set of mock ports that we will simulate opening. Any port in
-        # the set is a port we're simulating a listen on.
-        self.mock_listening_ports = set()
+    def test_server_rewrites_localhost_ips_in_responses(self):
+        server_manager = http_server.create_replay_server_manager(
+            {'/bar': http_response.HttpResponse(
+                200, {},
+                '<a href="http://127.0.0.1/foo>Click here for foo</a>')},
+            'ndt.mock-lab.org')
+        server_manager.start()
 
-        # Create a mock implementation of urlopen that raises IOError unless the
-        # requested port is one that has been set to listen.
-        def mock_urlopen(url):
-            # Parse the port number from the URL.
-            match = re.search(r'localhost:(\d+)', url)
-            if not match:
-                raise ValueError('test error: url in unexpected format: %s' %
-                                 url)
-            port = int(match.group(1))
+        server_url = 'http://localhost:%d' % server_manager.port
+        response = urllib2.urlopen('%s/bar' % server_url)
+        self.assertEqual(200, response.getcode())
+        # URLs like http://127.0.0.1 should be replaced with something like
+        # http://localhost:65432.
+        response_expected = '<a href="%s/foo>Click here for foo</a>' % server_url
+        self.assertEqual(response_expected, response.read())
 
-            # If the requested port is one we're simulating a listen on, return
-            # a dummy response. Otherwise, raise an IOError.
-            if port in self.mock_listening_ports:
-                return 'mock HTTP response'
-            else:
-                raise IOError('mock error from urlopen')
+    def test_server_rewrites_mlabns_responses(self):
+        """Server should rewrite server FQDN in mlab-ns responses."""
+        server_manager = http_server.create_replay_server_manager(
+            {'/ndt_ssl': http_response.HttpResponse(
+                200, {}, 'garbage to rewrite')}, 'mlab1.xyz0t.ndt.mock-lab.org')
+        server_manager.start()
 
-        http_server.urllib.urlopen.side_effect = mock_urlopen
+        response = urllib2.urlopen('http://localhost:%d/ndt_ssl' %
+                                   server_manager.port)
+        self.assertEqual(200, response.getcode())
+        self.assertEqual('mlab1.xyz0t.ndt.mock-lab.org',
+                         json.loads(response.read())['fqdn'])
 
-        self.mock_mlabns_server = mock.Mock(spec=fake_mlabns.FakeMLabNsServer,
-                                            port=MOCK_MLABNS_PORT)
 
-        # Simulate listening on the mlab-ns listen port when the serve_forever
-        # method is called.
-        self.mock_mlabns_server.serve_forever.side_effect = (
-            lambda: self.mock_listening_ports.add(MOCK_MLABNS_PORT))
+def parse_headers(header_items):
+    """Parses headers from a list of header two-tuples.
 
-    def make_server(self):
-        """Convenience method to create server under test."""
-        return http_server.ReplayHTTPServer(
-            MOCK_LISTEN_PORT, self.mock_mlabns_server, MOCK_REPLAY_FILENAME)
+    Parses headers from a list of header two-tuples (which are how they are
+    returned from the Message.items() interface). Drops the Server and Date
+    headers as they are not useful for the unit tests in this module.
 
-    def test_creating_server_creates_correct_threads_and_processes(self):
-        mock_mitmdump_proc = mock.Mock()
+    Args:
+        header_items: A list of two-tuples where the first value is a header
+            name and the second is the header value.
 
-        # Mock the effect of launching mitmdump in a subprocess. Simulate a
-        # listen on the port that mitmdump would listen on.
-        #
-        # Note: stdout is unused, but it must be named "stdout" because the code
-        # under test calls the function with a keyword parameter.
-        def mock_mitmdump_popen(unused_args, stdout):
-            self.mock_listening_ports.add(MOCK_LISTEN_PORT)
-            return mock_mitmdump_proc
-
-        http_server.subprocess.Popen.side_effect = mock_mitmdump_popen
-
-        with contextlib.closing(self.make_server()):
-            # Verify that mitmdump was spawned correctly.
-            http_server.subprocess.Popen.assert_called_once_with(
-                ['mitmdump', '--no-http2', '--no-pop', '--port=8123',
-                 '--reverse=http://ignored.ignored', '--replay-ignore-host',
-                 '--server-replay=mock-file.replay',
-                 '--replace=/~s/mlab\\-ns\\.appspot\\.com/localhost\\:8321'],
-                stdout=http_server.subprocess.PIPE)
-            # Verify that mlab-ns server is serving
-            self.assertTrue(self.mock_mlabns_server.serve_forever.called)
-            # Verify that the internal workers are not killed before we exit
-            # the context handler.
-            self.assertFalse(mock_mitmdump_proc.kill.called)
-            self.assertFalse(self.mock_mlabns_server.shutdown.called)
-
-        # After exiting the context handler, the internal workers should be
-        # terminated.
-        self.assertTrue(mock_mitmdump_proc.kill.called)
-        self.assertTrue(self.mock_mlabns_server.shutdown.called)
-
-    def test_raises_error_when_mitmproxy_is_not_installed(self):
-        """If we can't execute mitmproxy, show a helpful error."""
-        # Cause a mock error when spawning the mitmproxy process.
-        http_server.subprocess.Popen.side_effect = OSError('mock OSError')
-
-        with self.assertRaises(http_server.MitmProxyNotInstalledError):
-            with contextlib.closing(self.make_server()):
-                pass
+    Returns:
+        The parsed headers as a dictionary of key-value pairs.
+    """
+    headers = {}
+    for key, value in header_items:
+        # BaseHTTPServer adds the Server and Date headers to each response. We
+        # ignore these because they are not relevant to our testing.
+        if key in ['server', 'date']:
+            continue
+        headers[key] = value
+    return headers
 
 
 if __name__ == '__main__':
