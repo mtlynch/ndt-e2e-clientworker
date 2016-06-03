@@ -67,6 +67,7 @@ def create_browser(browser):
     else:
         raise ValueError('Invalid browser specified: %s' % browser)
 
+    driver.set_page_load_timeout(10)
     yield driver
     driver.quit()
 

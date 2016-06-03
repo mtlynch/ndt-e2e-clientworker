@@ -56,7 +56,7 @@ class BanjoDriver(object):
             browser: Can be one of 'firefox', 'chrome', 'edge', or 'safari'.
         """
         self._browser = browser
-        self._url = url
+        self._url = 'http://localhost:4242/non_existent_url'
 
     def perform_test(self):
         """Performs a full NDT test (both s2c and c2s) with the Banjo client.
