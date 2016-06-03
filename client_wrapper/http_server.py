@@ -27,7 +27,7 @@ import urllib
 
 import pytz
 
-import http_replay
+import http_response
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class ReplayHTTPServer(BaseHTTPServer.HTTPServer):
         for path in paths:
             if path in self._replays:
                 original_response = self._replays[path]
-                self._replays[path] = http_replay.HttpReplay(
+                self._replays[path] = http_response.HttpResponse(
                     original_response.response_code, original_response.headers,
                     mlabns_response_data)
 
@@ -116,7 +116,7 @@ class ReplayHTTPServer(BaseHTTPServer.HTTPServer):
             # content.
             headers = original_response.headers
             headers['content-length'] = len(rewritten_data)
-            self._replays[path] = http_replay.HttpReplay(
+            self._replays[path] = http_response.HttpResponse(
                 original_response.response_code, headers, rewritten_data)
 
 
