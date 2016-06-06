@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import absolute_import
+import contextlib
 import json
+import socket
 import unittest
 import urllib2
 
@@ -26,47 +28,62 @@ class ReplayHTTPServerTest(unittest.TestCase):
         response_data = 'mock foo response'
         stored_response = http_response.HttpResponse(200, {'Mock-Header': 'OK'},
                                                      response_data)
-        server_manager = http_server.create_replay_server_manager(
-            {'/foo': stored_response}, 'ndt.mock-lab.org')
-        server_manager.start()
+        with contextlib.closing(http_server.create_replay_server_manager(
+            {'/foo': stored_response}, 'ndt.mock-lab.org')) as server_manager:
+            server_manager.start()
 
-        response = urllib2.urlopen('http://localhost:%d/foo' %
-                                   server_manager.port)
-        self.assertEqual(200, response.getcode())
-        self.assertDictEqual(
-            {'mock-header': 'OK',
-             'content-length': str(len(response_data))},
-            parse_headers(response.info().items()))
-        self.assertEqual(response_data, response.read())
+            response = urllib2.urlopen('http://localhost:%d/foo' %
+                                       server_manager.port)
+            self.assertEqual(200, response.getcode())
+            self.assertDictEqual(
+                {'mock-header': 'OK',
+                 'content-length': str(len(response_data))},
+                parse_headers(response.info().items()))
+            self.assertEqual(response_data, response.read())
 
     def test_server_rewrites_localhost_ips_in_responses(self):
-        server_manager = http_server.create_replay_server_manager(
-            {'/bar': http_response.HttpResponse(
-                200, {},
-                '<a href="http://127.0.0.1/foo>Click here for foo</a>')},
-            'ndt.mock-lab.org')
-        server_manager.start()
+        stored_response = http_response.HttpResponse(
+            200, {}, '<a href="http://127.0.0.1/foo>Click here for foo</a>')
+        with contextlib.closing(http_server.create_replay_server_manager(
+            {'/bar': stored_response}, 'ndt.mock-lab.org')) as server_manager:
+            server_manager.start()
 
-        server_url = 'http://localhost:%d' % server_manager.port
-        response = urllib2.urlopen('%s/bar' % server_url)
-        self.assertEqual(200, response.getcode())
-        # URLs like http://127.0.0.1 should be replaced with something like
-        # http://localhost:65432.
-        response_expected = '<a href="%s/foo>Click here for foo</a>' % server_url
-        self.assertEqual(response_expected, response.read())
+            server_url = 'http://localhost:%d' % server_manager.port
+            response = urllib2.urlopen('%s/bar' % server_url)
+            self.assertEqual(200, response.getcode())
+            # URLs like http://127.0.0.1 should be replaced with something like
+            # http://localhost:65432.
+            response_expected = '<a href="%s/foo>Click here for foo</a>' % server_url
+            self.assertEqual(response_expected, response.read())
 
     def test_server_rewrites_mlabns_responses(self):
         """Server should rewrite server FQDN in mlab-ns responses."""
-        server_manager = http_server.create_replay_server_manager(
-            {'/ndt_ssl': http_response.HttpResponse(
-                200, {}, 'garbage to rewrite')}, 'mlab1.xyz0t.ndt.mock-lab.org')
-        server_manager.start()
+        stored_response = http_response.HttpResponse(200, {},
+                                                     'garbage to rewrite')
+        with contextlib.closing(http_server.create_replay_server_manager(
+            {'/ndt_ssl': stored_response
+            }, 'mlab1.xyz0t.ndt.mock-lab.org')) as server_manager:
+            server_manager.start()
 
-        response = urllib2.urlopen('http://localhost:%d/ndt_ssl' %
-                                   server_manager.port)
-        self.assertEqual(200, response.getcode())
-        self.assertEqual('mlab1.xyz0t.ndt.mock-lab.org',
-                         json.loads(response.read())['fqdn'])
+            response = urllib2.urlopen('http://localhost:%d/ndt_ssl' %
+                                       server_manager.port)
+            self.assertEqual(200, response.getcode())
+            self.assertEqual('mlab1.xyz0t.ndt.mock-lab.org',
+                             json.loads(response.read())['fqdn'])
+
+    def test_server_manager_shuts_down_server_on_close(self):
+        stored_response = http_response.HttpResponse(200, {}, 'dummy response')
+        with contextlib.closing(http_server.create_replay_server_manager(
+            {'/foo': stored_response}, 'ndt.mock-lab.org')) as server_manager:
+            server_manager.start()
+
+            url = 'http://localhost:%d/foo' % server_manager.port
+            response = urllib2.urlopen(url)
+            self.assertEqual(200, response.getcode())
+        # Attempting to query the same URL should time out because the child
+        # server should be shut down.
+        with self.assertRaises(socket.timeout):
+            urllib2.urlopen(url, timeout=0.025).getcode()
 
 
 def parse_headers(header_items):

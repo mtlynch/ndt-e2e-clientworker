@@ -190,10 +190,10 @@ class HttpServerManager(object):
 
     def _start_http_server_async(self):
         """Starts the child HTTP server in a background thread."""
-        self._server_thread = threading.Thread(
+        self._http_server_thread = threading.Thread(
             target=self._http_server.serve_forever)
-        self._server_thread.daemon = True
-        self._server_thread.start()
+        self._http_server_thread.daemon = True
+        self._http_server_thread.start()
 
     def close(self):
         """Shut down the child HTTP server."""
