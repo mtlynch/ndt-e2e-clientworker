@@ -18,9 +18,9 @@ import logging
 import os
 
 import banjo_driver
-import fake_mlabns
 import filename
 import html5_driver
+import http_response
 import http_server
 import names
 import result_encoder
@@ -32,14 +32,15 @@ logger = logging.getLogger(__name__)
 def main(args):
     _configure_logging(args.verbose)
     if args.client == names.BANJO:
-        fake_mlabns_server = fake_mlabns.FakeMLabNsServer(args.server)
-        logger.info('starting fake mlab-ns server on port %d',
-                    fake_mlabns_server.port)
-        with contextlib.closing(http_server.ReplayHTTPServer(
-                args.replay_port, fake_mlabns_server, args.client_path)):
+        with open(args.client_path) as replay_file:
+            replays = http_response.parse_yaml(replay_file.read())
+        with contextlib.closing(http_server.create_replay_server_manager(
+                replays, args.server)) as replay_server_manager:
+            replay_server_manager.start()
             logger.info('replay server replaying %s on port %d',
-                        args.client_path, args.replay_port)
-            url = 'http://localhost:%d/banjo' % args.replay_port
+                        args.client_path, replay_server_manager.port)
+            url = 'http://localhost:%d/banjo' % replay_server_manager.port
+            logger.info('starting tests against %s', url)
             driver = banjo_driver.BanjoDriver(args.browser, url)
             _run_test_iterations(driver, args.iterations, args.output)
     elif args.client == names.NDT_HTML5:
@@ -126,10 +127,6 @@ if __name__ == '__main__':
     parser.add_argument('--client_url',
                         help='URL of NDT client (for server-hosted clients)')
     parser.add_argument('--server', help='FQDN of NDT server to test against')
-    parser.add_argument('--replay_port',
-                        help='Port to listen on for replay server',
-                        type=int,
-                        default=8888)
     parser.add_argument('--output', help='Directory in which to write output')
     parser.add_argument('-v',
                         '--verbose',
