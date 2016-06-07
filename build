@@ -10,7 +10,7 @@ coverage run \
 # Check that source has correct formatting.
 yapf --diff --recursive --style google ./ --exclude=./third_party/* &&
 # Run static analysis for Python bugs/cruft.
-pyflakes client_wrapper/*.py tests/*.py &&
+pyflakes client_wrapper/*.py tests/*.py replay_generator/*.py &&
 # Check docstrings for style consistency.
 PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/docstringchecker \
-  pylint --reports=n client_wrapper tests
+  pylint --reports=n client_wrapper replay_generator tests
