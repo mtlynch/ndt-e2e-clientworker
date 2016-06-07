@@ -138,7 +138,8 @@ def _process_responses(original):
 
         if relative_url in processed:
             print 'warning: multiple responses for relative URL: %s' % relative_url
-        processed[relative_url] = response
+        processed[relative_url] = http_response.HttpResponse(
+            response.response_code, response.headers, data_processed)
     return processed
 
 
