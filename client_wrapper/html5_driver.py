@@ -36,18 +36,15 @@ ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON = (
 
 class NdtHtml5SeleniumDriver(object):
 
-    def __init__(self, browser, url, timeout):
+    def __init__(self, browser, url):
         """Creates a NDT HTML5 client driver for the given URL and browser.
 
         Args:
             url: The URL of an NDT server to test against.
             browser: Can be one of 'firefox', 'chrome', 'edge', or 'safari'.
-            timeout: The number of seconds that the driver will wait for each
-                element to become visible before timing out.
         """
         self._browser = browser
         self._url = url
-        self._timeout = timeout
 
     def perform_test(self):
         """Performs a full NDT test (both s2c and c2s) with the HTML5 client.
@@ -65,21 +62,19 @@ class NdtHtml5SeleniumDriver(object):
             result.browser_version = browser_client_common.get_browser_version(
                 driver)
 
-            _complete_ui_flow(driver, self._url, self._timeout, result)
+            _complete_ui_flow(driver, self._url, result)
 
         result.end_time = datetime.datetime.now(pytz.utc)
         logger.info('NDT HTML5 test ended')
         return result
 
 
-def _complete_ui_flow(driver, url, timeout, result):
+def _complete_ui_flow(driver, url, result):
     """Performs the UI flow for the NDT HTML5 test and records results.
 
     Args:
         driver: An instance of a Selenium webdriver browser class.
         url: URL to load to start the UI flow.
-        timeout: Maximum time (in seconds) to wait for an element to appear in
-            the flow.
         result: NdtResult instance to populate with results from proceeding
             through the UI flow.
     """
@@ -90,13 +85,13 @@ def _complete_ui_flow(driver, url, timeout, result):
 
     _click_websocket_button(driver)
     # If we can't click the start button, nothing left to do, so bail out.
-    if not _click_start_button(driver, timeout, result.errors):
+    if not _click_start_button(driver, result.errors):
         return
     logger.info('clicked "Start Test" button')
     result.c2s_result = results.NdtSingleTestResult()
     result.s2c_result = results.NdtSingleTestResult()
 
-    if _wait_for_c2s_test_to_start(driver, timeout):
+    if _wait_for_c2s_test_to_start(driver):
         result.c2s_result.start_time = datetime.datetime.now(pytz.utc)
         logger.info('c2s test started')
     else:
@@ -104,7 +99,7 @@ def _complete_ui_flow(driver, url, timeout, result):
             browser_client_common.ERROR_C2S_NEVER_STARTED))
         logger.error(browser_client_common.ERROR_C2S_NEVER_STARTED)
 
-    if _wait_for_s2c_test_to_start(driver, timeout):
+    if _wait_for_s2c_test_to_start(driver):
         result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
         logger.info('c2s test finished')
         result.s2c_result.start_time = datetime.datetime.now(pytz.utc)
@@ -114,7 +109,7 @@ def _complete_ui_flow(driver, url, timeout, result):
             browser_client_common.ERROR_S2C_NEVER_STARTED))
         logger.error(browser_client_common.ERROR_S2C_NEVER_STARTED)
 
-    if _wait_for_results_page_to_appear(driver, timeout):
+    if _wait_for_results_page_to_appear(driver):
         result.s2c_result.end_time = datetime.datetime.now(pytz.utc)
         logger.info('s2c test finished')
     else:
@@ -130,13 +125,11 @@ def _click_websocket_button(driver):
     driver.find_element_by_id('websocketButton').click()
 
 
-def _click_start_button(driver, timeout, errors):
+def _click_start_button(driver, errors):
     """Clicks the "Start Test" button in the web UI.
 
     Args:
         driver: An instance of a Selenium webdriver browser class.
-        timeout: Maximum time (in seconds) to wait for an element to appear in
-            the flow.
         errors: An errors list.
 
     Returns:
@@ -150,7 +143,7 @@ def _click_start_button(driver, timeout, errors):
         logger.error(ERROR_START_BUTTON_NOT_IN_DOM)
         return False
     if not browser_client_common.wait_until_element_is_visible(
-            driver, start_button, timeout):
+            driver, start_button, browser_client_common.UI_WAIT_TIMEOUT):
         errors.append(results.TestError(
             ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON))
         logger.error(ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON)
@@ -159,26 +152,28 @@ def _click_start_button(driver, timeout, errors):
     return True
 
 
-def _wait_for_c2s_test_to_start(driver, timeout):
+def _wait_for_c2s_test_to_start(driver):
     # Wait until the 'Now Testing your upload speed' banner is displayed.
     upload_speed_element = browser_client_common.find_element_containing_text(
         driver, 'your upload speed')
     return browser_client_common.wait_until_element_is_visible(
-        driver, upload_speed_element, timeout)
+        driver, upload_speed_element,
+        browser_client_common.NDT_TEST_NEGOTIATION_TIMEOUT)
 
 
-def _wait_for_s2c_test_to_start(driver, timeout):
+def _wait_for_s2c_test_to_start(driver):
     # Wait until the 'Now Testing your download speed' banner is displayed.
     download_speed_element = browser_client_common.find_element_containing_text(
         driver, 'your download speed')
     return browser_client_common.wait_until_element_is_visible(
-        driver, download_speed_element, timeout)
+        driver, download_speed_element,
+        browser_client_common.NDT_TEST_RUN_TIMEOUT)
 
 
-def _wait_for_results_page_to_appear(driver, timeout):
+def _wait_for_results_page_to_appear(driver):
     results_element = driver.find_element_by_id('results')
     return browser_client_common.wait_until_element_is_visible(
-        driver, results_element, timeout)
+        driver, results_element, browser_client_common.NDT_TEST_RUN_TIMEOUT)
 
 
 def _populate_metric_values(result, driver):

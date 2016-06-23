@@ -45,8 +45,7 @@ def main(args):
             _run_test_iterations(driver, args.iterations, args.output)
     elif args.client == names.NDT_HTML5:
         driver = html5_driver.NdtHtml5SeleniumDriver(args.browser,
-                                                     args.client_url,
-                                                     timeout=20)
+                                                     args.client_url)
         _run_test_iterations(driver, args.iterations, args.output)
     else:
         raise ValueError('unsupported NDT client: %s' % args.client)
