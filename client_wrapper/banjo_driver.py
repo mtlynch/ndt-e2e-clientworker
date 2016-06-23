@@ -41,10 +41,6 @@ ERROR_FORMAT_ILLEGAL_S2C_THROUGHPUT = (
 ERROR_FORMAT_ILLEGAL_C2S_THROUGHPUT = (
     'Illegal value shown for c2s throughput: [%s]')
 
-# Default number of seconds to wait for any particular stage of the UI flow to
-# complete.
-_DEFAULT_TIMEOUT = 20
-
 
 class BanjoDriver(object):
 
@@ -127,7 +123,7 @@ class _BanjoUiFlowWrapper(object):
 
         # When the latency field becomes visible in the web UI, the C2S test is
         # complete.
-        if self._wait_for_latency_field():
+        if self._wait_for_upload_test_to_end():
             self._result.c2s_result.end_time = datetime.datetime.now(pytz.utc)
             logger.info('c2s test ended')
         else:
@@ -147,7 +143,8 @@ class _BanjoUiFlowWrapper(object):
             self._result.c2s_result.throughput = upload_throughput
 
     def _click_run_test_button(self):
-        wait = ui.WebDriverWait(self._driver, _DEFAULT_TIMEOUT)
+        wait = ui.WebDriverWait(self._driver,
+                                browser_client_common.UI_WAIT_TIMEOUT)
         try:
             start_button = wait.until(
                 expected_conditions.element_to_be_clickable((
@@ -161,39 +158,47 @@ class _BanjoUiFlowWrapper(object):
         return True
 
     def _wait_for_download_test_to_start(self):
-        return self._wait_for_status_banner_text('Testing download...')
+        return self._wait_for_status_banner_text(
+            'Testing download...',
+            browser_client_common.NDT_TEST_NEGOTIATION_TIMEOUT)
 
     def _wait_for_download_test_to_end(self):
         return self._wait_for_status_banner_text(
-            'Waiting for upload to start...')
+            'Waiting for upload to start...',
+            browser_client_common.NDT_TEST_RUN_TIMEOUT)
 
     def _wait_for_upload_test_to_start(self):
-        return self._wait_for_status_banner_text('Testing upload...')
+        return self._wait_for_status_banner_text(
+            'Testing upload...',
+            browser_client_common.NDT_TEST_NEGOTIATION_TIMEOUT)
 
-    def _wait_for_status_banner_text(self, status_text):
+    def _wait_for_upload_test_to_end(self):
+        # The appearance of the latency field in the results page indicates that
+        # the test is complete.
+        return browser_client_common.wait_until_element_is_visible(
+            self._driver,
+            self._driver.find_element_by_id('lrfactory-internetspeed__latency'),
+            browser_client_common.NDT_TEST_RUN_TIMEOUT)
+
+    def _wait_for_status_banner_text(self, status_text, timeout):
         """Wait until specified text appears in the status banner of the web UI.
 
         Args:
             status_text: The text in the web UI banner for which to wait.
+            timeout: Amount of time (in seconds) to wait for specified text.
 
         Returns:
             True if the status banner displayed the specified within the
             timeout period.
         """
         try:
-            ui.WebDriverWait(self._driver, _DEFAULT_TIMEOUT).until(
+            ui.WebDriverWait(self._driver, timeout).until(
                 expected_conditions.text_to_be_present_in_element(
                     (by.By.CLASS_NAME,
                      'lrfactory-internetspeed__status-indicator'), status_text))
         except exceptions.TimeoutException:
             return False
         return True
-
-    def _wait_for_latency_field(self):
-        return browser_client_common.wait_until_element_is_visible(
-            self._driver,
-            self._driver.find_element_by_id('lrfactory-internetspeed__latency'),
-            _DEFAULT_TIMEOUT)
 
     def _parse_latency(self):
         """Parses the latency field of the results page.

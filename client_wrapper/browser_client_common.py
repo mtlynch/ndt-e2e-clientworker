@@ -22,6 +22,18 @@ from selenium.webdriver.support import ui
 import names
 import results
 
+# Number of seconds to wait for any particular event to occur in the browser UI
+# (e.g. page load, element becomes clickable).
+UI_WAIT_TIMEOUT = 2
+
+# Number of seconds to wait for the test negotiation phase to complete and the
+# test to begin.
+NDT_TEST_NEGOTIATION_TIMEOUT = 8
+
+# Number of seconds to wait for an NDT c2s or s2c test to complete (test is ten
+# seconds, plus four seconds of fudge factor).
+NDT_TEST_RUN_TIMEOUT = 10 + 4
+
 ERROR_FAILED_TO_LOAD_URL_FORMAT = 'Failed to load URL: %s'
 ERROR_TIMED_OUT_WAITING_FOR_PAGE_LOAD = 'Timed out waiting for page to load.'
 
