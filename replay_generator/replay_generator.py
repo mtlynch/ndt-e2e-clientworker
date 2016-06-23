@@ -159,10 +159,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='HTTP Replay Generator',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--port',
-                        help='Port to listen on',
-                        type=int,
-                        default=8888)
+    parser.add_argument(
+        '--port', help='Port to listen on',
+        type=int, default=8888)
     parser.add_argument('--output',
                         help='Directory in which to write output',
                         required=True)
