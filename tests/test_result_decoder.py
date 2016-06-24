@@ -100,26 +100,28 @@ class NdtResultDecoderTest(unittest.TestCase):
             client_version='mock_client_version',
             os='mock_os',
             os_version='mock_os_version',
-            c2s_result=results.NdtSingleTestResult(start_time=datetime.datetime(
-                2016, 2, 26, 15, 51, 24, 123456, pytz.utc),
-                                                   end_time=datetime.datetime(
-                                                       2016, 2, 26, 15, 51, 34,
-                                                       123456, pytz.utc),
-                                                   throughput=10.127),
-            s2c_result=results.NdtSingleTestResult(start_time=datetime.datetime(
-                2016, 2, 26, 15, 51, 35, 123456, pytz.utc),
-                                                   end_time=datetime.datetime(
-                                                       2016, 2, 26, 15, 51, 45,
-                                                       123456, pytz.utc),
-                                                   throughput=98.235),
+            c2s_result=results.NdtSingleTestResult(
+                start_time=datetime.datetime(2016, 2, 26, 15, 51, 24, 123456,
+                                             pytz.utc),
+                end_time=datetime.datetime(2016, 2, 26, 15, 51, 34, 123456,
+                                           pytz.utc),
+                throughput=10.127),
+            s2c_result=results.NdtSingleTestResult(
+                start_time=datetime.datetime(2016, 2, 26, 15, 51, 35, 123456,
+                                             pytz.utc),
+                end_time=datetime.datetime(2016, 2, 26, 15, 51, 45, 123456,
+                                           pytz.utc),
+                throughput=98.235),
             latency=23.8,
             browser='mock_browser',
             browser_version='mock_browser_version',
             errors=[
-                results.TestError('mock error message 1', datetime.datetime(
-                    2016, 2, 26, 15, 53, 29, 123456, pytz.utc)),
-                results.TestError('mock error message 2', datetime.datetime(
-                    2016, 2, 26, 15, 53, 30, 654321, pytz.utc))
+                results.TestError('mock error message 1',
+                                  datetime.datetime(2016, 2, 26, 15, 53, 29,
+                                                    123456, pytz.utc)),
+                results.TestError('mock error message 2',
+                                  datetime.datetime(2016, 2, 26, 15, 53, 30,
+                                                    654321, pytz.utc))
             ])
 
         decoded_actual = self.decoder.decode(encoded)

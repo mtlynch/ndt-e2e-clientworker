@@ -74,8 +74,7 @@ class TestError(object):
 
     def __str__(self):
         return '[message={message}, timestamp={timestamp}]'.format(
-            message=self.message,
-            timestamp=self.timestamp)
+            message=self.message, timestamp=self.timestamp)
 
     @property
     def message(self):
