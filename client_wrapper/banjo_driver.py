@@ -193,9 +193,9 @@ class _BanjoUiFlowWrapper(object):
         """
         try:
             ui.WebDriverWait(self._driver, timeout).until(
-                expected_conditions.text_to_be_present_in_element(
-                    (by.By.CLASS_NAME,
-                     'lrfactory-internetspeed__status-indicator'), status_text))
+                expected_conditions.text_to_be_present_in_element((
+                    by.By.CLASS_NAME,
+                    'lrfactory-internetspeed__status-indicator'), status_text))
         except exceptions.TimeoutException:
             return False
         return True

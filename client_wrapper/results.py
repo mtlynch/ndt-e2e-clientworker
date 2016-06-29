@@ -37,7 +37,7 @@ class NdtSingleTestResult(object):
     def __eq__(self, other):
         return all(((self.throughput == other.throughput),
                     (self.start_time == other.start_time),
-                    (self.end_time == other.end_time)))  # yapf: disable
+                    (self.end_time == other.end_time)))
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -67,7 +67,7 @@ class TestError(object):
 
     def __eq__(self, other):
         return all(((self.message == other.message),
-                    (self.timestamp == other.timestamp)))  # yapf: disable
+                    (self.timestamp == other.timestamp)))
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -139,18 +139,16 @@ class NdtResult(object):
         self.browser_version = browser_version
 
     def __eq__(self, other):
-        return all((
-            (self.start_time == other.start_time),
-            (self.end_time == other.end_time),
-            (self.c2s_result == other.c2s_result),
-            (self.s2c_result == other.s2c_result),
-            (self.latency == other.latency),
-            (self.os == other.os),
-            (self.os_version == other.os_version),
-            (self.client == other.client),
-            (self.client_version == other.client_version),
-            (self.browser == other.browser),
-            (self.browser_version == other.browser_version)))  # yapf: disable
+        return all(((self.start_time == other.start_time),
+                    (self.end_time == other.end_time),
+                    (self.c2s_result == other.c2s_result),
+                    (self.s2c_result == other.s2c_result),
+                    (self.latency == other.latency), (self.os == other.os),
+                    (self.os_version == other.os_version),
+                    (self.client == other.client),
+                    (self.client_version == other.client_version),
+                    (self.browser == other.browser),
+                    (self.browser_version == other.browser_version)))
 
     def __ne__(self, other):
         return not self.__eq__(other)

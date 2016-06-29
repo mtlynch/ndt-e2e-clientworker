@@ -48,8 +48,8 @@ class HttpResponse(yaml.YAMLObject):
     def __eq__(self, other):
         if not other:
             return False
-        return all(((self.response_code == other.response_code), (
-            self.headers == other.headers), (self.data == other.data)))
+        return all(((self.response_code == other.response_code),
+                    (self.headers == other.headers), (self.data == other.data)))
 
     def __ne__(self, other):
         return not self.__eq__(other)

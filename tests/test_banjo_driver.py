@@ -131,8 +131,8 @@ class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
 
             result = self.banjo.perform_test()
 
-            self.assertErrorMessagesEqual(
-                ['mock url load error'], result.errors)
+            self.assertErrorMessagesEqual(['mock url load error'],
+                                          result.errors)
 
             # No other result fields should be populated.
             self.assertIsNone(result.latency)
@@ -227,8 +227,8 @@ class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
         self.assertIsNone(result.latency)
         self.assertEqual(4.56, result.s2c_result.throughput)
         self.assertEqual(7.89, result.c2s_result.throughput)
-        self.assertErrorMessagesEqual(
-            ['Illegal value shown for latency: []'], result.errors)
+        self.assertErrorMessagesEqual(['Illegal value shown for latency: []'],
+                                      result.errors)
 
     def test_errors_occur_when_results_page_displays_blank_download_throughput(
             self):
@@ -333,8 +333,8 @@ class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
         result = self.banjo.perform_test()
 
         self.assertIsNone(result.latency)
-        self.assertErrorMessagesEqual(
-            [banjo_driver.ERROR_NO_LATENCY_FIELD], result.errors)
+        self.assertErrorMessagesEqual([banjo_driver.ERROR_NO_LATENCY_FIELD],
+                                      result.errors)
 
     def test_records_error_when_download_element_is_not_in_dom(self):
         self.mock_elements_by_xpath[
@@ -343,8 +343,8 @@ class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
         result = self.banjo.perform_test()
 
         self.assertIsNone(result.s2c_result.throughput)
-        self.assertErrorMessagesEqual(
-            [banjo_driver.ERROR_NO_S2C_FIELD], result.errors)
+        self.assertErrorMessagesEqual([banjo_driver.ERROR_NO_S2C_FIELD],
+                                      result.errors)
 
     def test_records_error_when_upload_element_is_not_in_dom(self):
         self.mock_elements_by_xpath[
@@ -353,8 +353,8 @@ class BanjoDriverTest(ndt_client_testcase.NdtClientTestCase):
         result = self.banjo.perform_test()
 
         self.assertIsNone(result.c2s_result.throughput)
-        self.assertErrorMessagesEqual(
-            [banjo_driver.ERROR_NO_C2S_FIELD], result.errors)
+        self.assertErrorMessagesEqual([banjo_driver.ERROR_NO_C2S_FIELD],
+                                      result.errors)
 
 
 if __name__ == '__main__':

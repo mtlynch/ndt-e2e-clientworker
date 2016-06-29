@@ -116,12 +116,10 @@ class NdtResultDecoderTest(unittest.TestCase):
             browser='mock_browser',
             browser_version='mock_browser_version',
             errors=[
-                results.TestError('mock error message 1',
-                                  datetime.datetime(2016, 2, 26, 15, 53, 29,
-                                                    123456, pytz.utc)),
-                results.TestError('mock error message 2',
-                                  datetime.datetime(2016, 2, 26, 15, 53, 30,
-                                                    654321, pytz.utc))
+                results.TestError('mock error message 1', datetime.datetime(
+                    2016, 2, 26, 15, 53, 29, 123456, pytz.utc)),
+                results.TestError('mock error message 2', datetime.datetime(
+                    2016, 2, 26, 15, 53, 30, 654321, pytz.utc))
             ])
 
         decoded_actual = self.decoder.decode(encoded)
