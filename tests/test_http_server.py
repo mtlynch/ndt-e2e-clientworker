@@ -35,10 +35,9 @@ class ReplayHTTPServerTest(unittest.TestCase):
             response = urllib2.urlopen('http://localhost:%d/foo' %
                                        server_manager.port)
             self.assertEqual(200, response.getcode())
-            self.assertDictEqual(
-                {'mock-header': 'OK',
-                 'content-length': str(len(response_data))},
-                parse_headers(response.info().items()))
+            self.assertDictEqual({'mock-header': 'OK',
+                                  'content-length': str(len(response_data))},
+                                 parse_headers(response.info().items()))
             self.assertEqual(response_data, response.read())
 
     def test_server_rewrites_localhost_ips_in_responses(self):
@@ -60,9 +59,9 @@ class ReplayHTTPServerTest(unittest.TestCase):
         """Server should rewrite server FQDN in mlab-ns responses."""
         stored_response = http_response.HttpResponse(200, {},
                                                      'garbage to rewrite')
-        with contextlib.closing(http_server.create_replay_server_manager(
-            {'/ndt_ssl': stored_response
-            }, 'mlab1.xyz0t.ndt.mock-lab.org')) as server_manager:
+        with contextlib.closing(http_server.create_replay_server_manager({
+                '/ndt_ssl': stored_response
+        }, 'mlab1.xyz0t.ndt.mock-lab.org')) as server_manager:
             server_manager.start()
 
             response = urllib2.urlopen('http://localhost:%d/ndt_ssl' %

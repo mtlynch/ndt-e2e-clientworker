@@ -91,13 +91,13 @@ class ReplayHTTPServer(BaseHTTPServer.HTTPServer):
             ndt_server_fqdn: Target NDT server to use in rewritten mlab-ns
                 responses.
         """
-        mlabns_response_data = json.dumps(
-            {'city': 'Test_TT',
-             'url': 'http://%s:7123' % ndt_server_fqdn,
-             'ip': ['1.2.3.4'],
-             'fqdn': ndt_server_fqdn,
-             'site': 'xyz99',
-             'country': 'US'})
+        mlabns_response_data = json.dumps({'city': 'Test_TT',
+                                           'url':
+                                           'http://%s:7123' % ndt_server_fqdn,
+                                           'ip': ['1.2.3.4'],
+                                           'fqdn': ndt_server_fqdn,
+                                           'site': 'xyz99',
+                                           'country': 'US'})
         paths = ['/ndt', '/ndt_ssl']
         for path in paths:
             if path in self._replays:
@@ -208,8 +208,8 @@ def _wait_for_local_http_response(port):
     # HTTP requests.
     max_wait_seconds = 5
     start_time = datetime.datetime.now(tz=pytz.utc)
-    while (datetime.datetime.now(tz=pytz.utc) -
-           start_time).total_seconds() < max_wait_seconds:
+    while (datetime.datetime.now(tz=pytz.utc) - start_time
+          ).total_seconds() < max_wait_seconds:
         try:
             urllib.urlopen('http://localhost:%d/' % port)
             return
