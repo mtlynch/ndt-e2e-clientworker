@@ -148,16 +148,18 @@ class _NdtHtml5UiFlowWrapper(object):
 
     def _wait_for_c2s_test_to_start(self):
         # Wait until the 'Now Testing your upload speed' banner is displayed.
-        upload_speed_element = browser_client_common.find_element_containing_text(
-            self._driver, 'your upload speed')
+        upload_speed_element = (
+            browser_client_common.find_element_containing_text(
+                self._driver, 'your upload speed'))
         return browser_client_common.wait_until_element_is_visible(
             self._driver, upload_speed_element,
             browser_client_common.NDT_TEST_NEGOTIATION_TIMEOUT)
 
     def _wait_for_s2c_test_to_start(self):
         # Wait until the 'Now Testing your download speed' banner is displayed.
-        download_speed_element = browser_client_common.find_element_containing_text(
-            self._driver, 'your download speed')
+        download_speed_element = (
+            browser_client_common.find_element_containing_text(
+                self._driver, 'your download speed'))
         return browser_client_common.wait_until_element_is_visible(
             self._driver, download_speed_element,
             browser_client_common.NDT_TEST_RUN_TIMEOUT)
@@ -171,9 +173,9 @@ class _NdtHtml5UiFlowWrapper(object):
     def _parse_results_page(self):
         """Populates NdtResult with metrics from page, checks values are valid.
 
-        Populates the NdtResult instance with metrics from the NDT test page. Checks
-        that the values for upload (c2s) throughput, download (s2c) throughput, and
-        latency within the NdtResult instance dict are valid.
+        Populates the NdtResult instance with metrics from the NDT test page.
+        Checks that the values for upload (c2s) throughput, download (s2c)
+        throughput, and latency within the NdtResult instance dict are valid.
         """
         c2s_throughput = self._driver.find_element_by_id('upload-speed').text
         c2s_throughput_units = self._driver.find_element_by_id(
@@ -197,15 +199,15 @@ class _NdtHtml5UiFlowWrapper(object):
         """Converts metric into a valid numeric value in Mb/s .
 
         For a given metric, checks that it is a valid numeric value. If not, an
-        error is added to the list contained in the NdtResult instance attribute.
-        If it is, it is converted into Mb/s where necessary.
+        error is added to the list contained in the NdtResult instance
+        attribute. If it is, it is converted into Mb/s where necessary.
 
         Args:
             throughput: The throughput value that is to be evaluated.
             throughput_units: The units for the throughput value that is to be
             evaluated (one of kb/s, Mb/s, Gb/s).
-            throughput_metric_name: A string representing the name of the throughput
-            metric to validate.
+            throughput_metric_name: A string representing the name of the
+                throughput metric to validate.
 
         Returns:
             float representing the converted metric, None if an illegal value
@@ -229,17 +231,17 @@ class _NdtHtml5UiFlowWrapper(object):
     def _convert_metric_to_float(self, metric, metric_name):
         """Converts a given metric to a float, otherwise, adds an error object.
 
-        If a given metric can be converted to a float, it is converted. Otherwise,
-        a TestError object is added to errors.
+        If a given metric can be converted to a float, it is converted.
+        Otherwise, a TestError object is added to errors.
 
         Args:
             metric: The value of the metric that is to be evaluated.
-            metric_name: A string representing the name of the metric to validate.
+            metric_name: A string representing the name of the metric to
+                validate.
 
         Returns:
             True if the validation was successful.
         """
-
         try:
             float(metric)
         except ValueError:
@@ -252,11 +254,13 @@ class _NdtHtml5UiFlowWrapper(object):
         """Checks whether a given metric is a valid numeric value.
 
         For a given metric, checks that it is a valid numeric value. If not, an
-        error is added to the list contained in the NdtResult instance attribute.
+        error is added to the list contained in the NdtResult instance
+        attribute.
 
         Args:
             metric: The value of the metric that is to be evaluated.
-            metric_name: A string representing the name of the metric to validate.
+            metric_name: A string representing the name of the metric to
+                validate.
 
         Returns:
             A float if the metric was validated, otherwise, returns None.
