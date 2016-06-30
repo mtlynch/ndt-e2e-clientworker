@@ -44,8 +44,7 @@ def main(args):
             driver = banjo_driver.BanjoDriver(args.browser, url)
             _run_test_iterations(driver, args.iterations, args.output)
     elif args.client == names.NDT_HTML5:
-        driver = html5_driver.NdtHtml5SeleniumDriver(args.browser,
-                                                     args.client_url)
+        driver = html5_driver.NdtHtml5SeleniumDriver(args.browser, args.server)
         _run_test_iterations(driver, args.iterations, args.output)
     else:
         raise ValueError('unsupported NDT client: %s' % args.client)
@@ -123,8 +122,6 @@ if __name__ == '__main__':
                               'client, these can be replay files, static HTML '
                               'files (not implemented), or a client binary '
                               '(not implemented)'))
-    parser.add_argument('--client_url',
-                        help='URL of NDT client (for server-hosted clients)')
     parser.add_argument('--server', help='FQDN of NDT server to test against')
     parser.add_argument('--output', help='Directory in which to write output')
     parser.add_argument('-v',

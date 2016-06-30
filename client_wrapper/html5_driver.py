@@ -36,15 +36,15 @@ ERROR_TIMED_OUT_WAITING_FOR_START_BUTTON = (
 
 class NdtHtml5SeleniumDriver(object):
 
-    def __init__(self, browser, url):
+    def __init__(self, browser, server_fqdn):
         """Creates a NDT HTML5 client driver for the given URL and browser.
 
         Args:
-            url: The URL of an NDT server to test against.
             browser: Can be one of 'firefox', 'chrome', 'edge', or 'safari'.
+            server_fqdn: The URL of an NDT server to test against.
         """
         self._browser = browser
-        self._url = url
+        self._server_fqdn = server_fqdn
 
     def perform_test(self):
         """Performs a full NDT test (both s2c and c2s) with the HTML5 client.
@@ -62,7 +62,10 @@ class NdtHtml5SeleniumDriver(object):
             result.browser_version = browser_client_common.get_browser_version(
                 driver)
 
-            _complete_ui_flow(driver, self._url, result)
+            # The NDT HTML5 client is hosted on a web server on port 7123 of the
+            # NDT server.
+            url = 'http://%s:7123' % self._server_fqdn
+            _complete_ui_flow(driver, url, result)
 
         result.end_time = datetime.datetime.now(pytz.utc)
         logger.info('NDT HTML5 test ended')

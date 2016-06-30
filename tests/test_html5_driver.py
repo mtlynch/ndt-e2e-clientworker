@@ -67,7 +67,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
             self):
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertEqual(1.0, result.c2s_result.throughput)
         self.assertEqual(2.0, result.s2c_result.throughput)
@@ -79,7 +79,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertIsNone(result.c2s_result.throughput)
         self.assertIsNone(result.s2c_result.throughput)
@@ -95,7 +95,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertIsNone(result.c2s_result.throughput)
         self.assertIsNone(result.s2c_result.throughput)
@@ -115,7 +115,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
         ]
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertErrorMessagesEqual(
             [browser_client_common.ERROR_C2S_NEVER_STARTED,
@@ -132,7 +132,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
         ]
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertErrorMessagesEqual(
             [browser_client_common.ERROR_C2S_NEVER_STARTED], result.errors)
@@ -141,7 +141,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
         self.mock_page_elements['latency'] = mock.Mock(text='Non-numeric value')
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertEqual(1.0, result.c2s_result.throughput)
         self.assertEqual(2.0, result.s2c_result.throughput)
@@ -155,7 +155,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
             text='Non-numeric value')
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertIsNone(result.c2s_result.throughput)
         self.assertEqual(2.0, result.s2c_result.throughput)
@@ -169,7 +169,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
             text='Non-numeric value')
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertEqual(1.0, result.c2s_result.throughput)
         self.assertIsNone(result.s2c_result.throughput)
@@ -193,7 +193,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertIsNone(result.c2s_result.throughput)
         self.assertIsNone(result.s2c_result.throughput)
@@ -214,7 +214,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         # Then s2c is converted from Gb/s to Mb/s
         self.assertEqual(72000.0, result.s2c_result.throughput)
@@ -228,7 +228,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         self.assertIsNone(result.c2s_result.throughput)
         self.assertEqual(2.0, result.s2c_result.throughput)
@@ -245,7 +245,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
         self.mock_page_elements['download-speed-units'] = mock.Mock(text='Mb/s')
         result = html5_driver.NdtHtml5SeleniumDriver(
             browser='firefox',
-            url='http://ndt.mock-server.com:7123/').perform_test()
+            server_fqdn='ndt.mock-server.com').perform_test()
 
         # Then c2s is converted from kb/s to Mb/s
         self.assertEqual(0.072, result.c2s_result.throughput)
@@ -289,7 +289,7 @@ class NdtHtml5SeleniumDriverTest(ndt_client_testcase.NdtClientTestCase):
 
             result = html5_driver.NdtHtml5SeleniumDriver(
                 browser='firefox',
-                url='http://ndt.mock-server.com:7123/').perform_test()
+                server_fqdn='ndt.mock-server.com').perform_test()
 
         # Verify the recorded times matches the expected sequence.
         self.assertEqual(times[0], result.start_time)
