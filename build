@@ -2,15 +2,18 @@
 #
 # Build steps to validate client_wrapper.
 
+# Exit build script on first failure.
+set -e
+
 # Run unit tests and calculate code coverage.
-coverage run \
-  --source client_wrapper \
-  --omit client_wrapper/install_selenium_extensions.py \
-  -m unittest discover &&
+coverage run --source client_wrapper -m unittest discover
+
 # Check that source has correct formatting.
-yapf --diff --recursive --style google ./ --exclude=./third_party/* &&
+yapf --diff --recursive --style google ./ --exclude=./third_party/*
+
 # Run static analysis for Python bugs/cruft.
-pyflakes client_wrapper/*.py tests/*.py replay_generator/*.py &&
+pyflakes client_wrapper/*.py tests/*.py replay_generator/*.py
+
 # Check docstrings for style consistency.
 PYTHONPATH=$PYTHONPATH:$(pwd)/third_party/docstringchecker \
   pylint --reports=n client_wrapper replay_generator tests
